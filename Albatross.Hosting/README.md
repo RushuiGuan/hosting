@@ -3,8 +3,8 @@ A library for bootstrapping .Net Web Api or Service applications with preset fun
 
 ## Features
 * Targets .Net 8
-* Logging integration with Serilog provided by [Albatross.Logging](../../logging/Albatross.Logging)
-* Simplified configuration management provided by [Albatross.Config](../../config/Albatross.Config)
+* Logging integration with Serilog provided by [Albatross.Logging](https://www.nuget.org/packages/Albatross.Logging)
+* Simplified configuration management provided by [Albatross.Config](https://www.nuget.org/packages/Albatross.Config)
 * Built-in [http request logging](../docs/request-logging.md) middleware
 * Built-in [plain text input formatter](../docs/plain-text-input-formatter.md)
 * [Unified error response format](../docs/unified-error-response.md)
