@@ -4,4 +4,4 @@ Albatross Hosting is a bootstrapping library that is used to create a aspnet web
 # Libraries
 |Name|Description||
 |-|-|-|
-|[hosting](./hosting/Albatross.Hosting/)|Bootstrapping library that is used to create a web or service app|[![NuGet Version](https://img.shields.io/nuget/v/Albatross.Hosting)](https://www.nuget.org/packages/Albatross.Hosting)|
+|[Albatross.Hosting](.//Albatross.Hosting/)|Bootstrapping library that is used to create a web or service app|[![NuGet Version](https://img.shields.io/nuget/v/Albatross.Hosting)](https://www.nuget.org/packages/Albatross.Hosting)|
