@@ -7,7 +7,7 @@
 		<OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
 		<IsPackable>true</IsPackable>
 		<Description>A library for creating .Net Web Api or Service applications with preconfigured settings</Description>
-		<PackageProjectUrl>$(RepositoryProjectRoot)/Hosting/Albatross.Hosting</PackageProjectUrl>
+		<PackageProjectUrl>$(RepositoryProjectRoot)/Albatross.Hosting</PackageProjectUrl>
 	</PropertyGroup>
 	<ItemGroup>
 		<Content Remove="serilog.json" />
