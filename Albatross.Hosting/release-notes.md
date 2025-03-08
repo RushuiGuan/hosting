@@ -1,3 +1,5 @@
+# 8.0.0
+The last change was a breaking change.  Bump the major version number.
 # 7.6.2
 * Replace reference `Albatross.Serialization` with `Albatross.Serialization.Json`
 * Update `Microsoft.AspNetCore.*` library to version 8.0.13
