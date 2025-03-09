@@ -22,7 +22,7 @@
 		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="7.6.2" />
 		<PackageReference Include="Albatross.Config" Version="7.5.9" />
 		<PackageReference Include="Albatross.Logging" Version="8.0.1" />
-		<PackageReference Include="Albatross.Serialization.Json" Version="8.0.1" />
+		<PackageReference Include="Albatross.Serialization.Json" Version="8.0.2" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
 	</ItemGroup>
 	<ItemGroup>
