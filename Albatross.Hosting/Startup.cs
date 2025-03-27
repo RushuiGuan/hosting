@@ -38,6 +38,11 @@ namespace Albatross.Hosting {
 		public virtual bool Secured { get; } = false;
 		public virtual bool Spa { get; } = false;
 		public virtual bool LogUsage { get; } = true;
+		/// <summary>
+		/// If true, the <see cref="ArgumentExceptionFilter"> will be used to catch ArgumentException and return a 400 status code.
+		/// No additional logging will be done.  This feature is to avoid excessive logging of bad requests.
+		/// </summary>
+		public virtual bool UseArgumentExceptionFilter { get; } = true;
 
 		public Startup(IConfiguration configuration) {
 			this.Configuration = configuration;
@@ -116,8 +121,12 @@ namespace Albatross.Hosting {
 			services.TryAddSingleton(provider => new UsageWriter(provider.GetRequiredService<ILoggerFactory>().CreateLogger("Usage")));
 
 			if (WebApi) {
-				services.AddControllers(options => options.InputFormatters.Add(new PlainTextInputFormatter()))
-					.AddJsonOptions(ConfigureJsonOption);
+				services.AddControllers(options => {
+					options.InputFormatters.Add(new PlainTextInputFormatter());
+					if (this.UseArgumentExceptionFilter) {
+						options.Filters.Add<ArgumentExceptionFilter>();
+					}
+				}).AddJsonOptions(ConfigureJsonOption);
 				services.AddCors(opt => opt.AddDefaultPolicy(ConfigureCors));
 				services.AddAspNetCorePrincipalProvider();
 				if (Swagger) {

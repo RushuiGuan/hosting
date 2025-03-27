@@ -61,5 +61,11 @@ namespace Sample.WebApi.Controllers {
 				return BadRequest(err.ErrorTextMessage(logger));
 			}
 		}
+
+
+		[HttpGet("error3")]
+		public string TestArgumentExceptionFilter(string msg) {
+			throw new ArgumentException($"bad request from you: {msg}");
+		}
 	}
 }
