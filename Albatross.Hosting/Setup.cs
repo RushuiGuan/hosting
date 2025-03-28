@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Events;
 using System;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace Albatross.Hosting {
 		public Setup(string[] args) {
 			environment = EnvironmentSetting.ASPNETCORE_ENVIRONMENT.Value;
 			hostBuilder = Host.CreateDefaultBuilder(args).UseSerilog();
-			setupSerilog = new SetupSerilog().UseConfigFile(environment, null, args);
+			this.setupSerilog = ConfigureLogging(new SetupSerilog(), environment, args);
 			var configBuilder = new ConfigurationBuilder()
 				.SetBasePath(AppContext.BaseDirectory)
 				.AddJsonFile("appsettings.json", false, true);
@@ -35,6 +36,16 @@ namespace Albatross.Hosting {
 				builder.Sources.Clear();
 				builder.AddConfiguration(configuration);
 			});
+		}
+		protected virtual bool SupressUnhandledArgumentException { get; }
+		protected virtual SetupSerilog ConfigureLogging(SetupSerilog setup, string environment, string[] args) {
+			if (SupressUnhandledArgumentException) {
+				setup.Configure(c => c.Filter.ByExcluding(e => e.Properties.TryGetValue("SourceContext", out var sourceContext)
+					&& sourceContext.Equals(new ScalarValue("Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware"))
+					&& e.Exception is ArgumentException));
+			}
+			setup.UseConfigFile(environment, null, args);
+			return setup;
 		}
 
 		public virtual Setup RunAsService() {

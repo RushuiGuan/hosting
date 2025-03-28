@@ -39,11 +39,9 @@ namespace Albatross.Hosting {
 		public virtual bool Spa { get; } = false;
 		public virtual bool LogUsage { get; } = true;
 		/// <summary>
-		/// If true, any ArgumentException thrown by an endpoint will return a 400 status code.
-		/// No additional logging will be done.  This feature is to avoid excessive logging of bad requests.
+		/// If true, unhandled ArgumentException will create a 400 BadRequest response.
 		/// </summary>
 		public virtual bool TreatArgumentExceptionAsBadRequest { get; } = true;
-
 		public Startup(IConfiguration configuration) {
 			this.Configuration = configuration;
 			Log.Logger.Information("AspNetCore Startup configuration with secured={secured}, spa={spa}, swagger={swagger}, webapi={webapi}, usage={usage}", Secured, Spa, Swagger, WebApi, LogUsage);
@@ -164,18 +162,16 @@ namespace Albatross.Hosting {
 		protected async Task HandleGlobalExceptions(HttpContext context) {
 			var feature = context.Features.Get<IExceptionHandlerFeature>();
 			var error = feature?.Error;
-			if (error is ArgumentException && this.TreatArgumentExceptionAsBadRequest) {
+			if(TreatArgumentExceptionAsBadRequest && error is ArgumentException) {
 				context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-				context.Response.ContentType = MediaTypeNames.Text.Plain;
-				await context.Response.WriteAsync(error.Message);
 			} else {
 				context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-				context.Response.ContentType = MediaTypeNames.Application.Json;
-				if (error != null) {
-					var msg = CreateExceptionMessage(error);
-					msg.StatusCode = context.Response.StatusCode;
-					await JsonSerializer.SerializeAsync(context.Response.BodyWriter.AsStream(), msg, JsonSerializerOptions);
-				}
+			}
+			context.Response.ContentType = MediaTypeNames.Application.Json;
+			if (error != null) {
+				var msg = CreateExceptionMessage(error);
+				msg.StatusCode = context.Response.StatusCode;
+				await JsonSerializer.SerializeAsync(context.Response.BodyWriter.AsStream(), msg, JsonSerializerOptions);
 			}
 		}
 
