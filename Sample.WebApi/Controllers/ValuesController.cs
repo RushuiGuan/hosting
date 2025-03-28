@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Sample.WebApi.Controllers {
 	[Route("api/[controller]")]
@@ -66,6 +68,28 @@ namespace Sample.WebApi.Controllers {
 		[HttpGet("error3")]
 		public string TestArgumentExceptionFilter(string msg) {
 			throw new ArgumentException($"bad request from you: {msg}");
+		}
+
+
+		[HttpGet("error4")]
+		public IEnumerable<int> TestArgumentExceptionFilter1(int max) {
+			for(int i=0; i<max; i++) {
+				yield return i;
+				if (i > 100) {
+					throw new ArgumentException("too big");
+				}
+			}
+		}
+
+		[HttpGet("error5")]
+		public async IAsyncEnumerable<int> TestArgumentExceptionFilter2(int max) {
+			await Task.Delay(1);
+			for (int i = 0; i < max; i++) {
+				yield return i;
+				if (i > 100) {
+					throw new ArgumentException("too big");
+				}
+			}
 		}
 	}
 }

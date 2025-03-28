@@ -39,10 +39,10 @@ namespace Albatross.Hosting {
 		public virtual bool Spa { get; } = false;
 		public virtual bool LogUsage { get; } = true;
 		/// <summary>
-		/// If true, the <see cref="ArgumentExceptionFilter"> will be used to catch ArgumentException and return a 400 status code.
+		/// If true, any ArgumentException thrown by an endpoint will return a 400 status code.
 		/// No additional logging will be done.  This feature is to avoid excessive logging of bad requests.
 		/// </summary>
-		public virtual bool UseArgumentExceptionFilter { get; } = true;
+		public virtual bool TreatArgumentExceptionAsBadRequest { get; } = true;
 
 		public Startup(IConfiguration configuration) {
 			this.Configuration = configuration;
@@ -123,9 +123,6 @@ namespace Albatross.Hosting {
 			if (WebApi) {
 				services.AddControllers(options => {
 					options.InputFormatters.Add(new PlainTextInputFormatter());
-					if (this.UseArgumentExceptionFilter) {
-						options.Filters.Add<ArgumentExceptionFilter>();
-					}
 				}).AddJsonOptions(ConfigureJsonOption);
 				services.AddCors(opt => opt.AddDefaultPolicy(ConfigureCors));
 				services.AddAspNetCorePrincipalProvider();
@@ -165,14 +162,20 @@ namespace Albatross.Hosting {
 		}
 
 		protected async Task HandleGlobalExceptions(HttpContext context) {
-			context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-			context.Response.ContentType = MediaTypeNames.Application.Json;
-			var error = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-
-			if (error != null) {
-				var msg = CreateExceptionMessage(error);
-				msg.StatusCode = context.Response.StatusCode;
-				await JsonSerializer.SerializeAsync(context.Response.BodyWriter.AsStream(), msg, JsonSerializerOptions);
+			var feature = context.Features.Get<IExceptionHandlerFeature>();
+			var error = feature?.Error;
+			if (error is ArgumentException && this.TreatArgumentExceptionAsBadRequest) {
+				context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+				context.Response.ContentType = MediaTypeNames.Text.Plain;
+				await context.Response.WriteAsync(error.Message);
+			} else {
+				context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+				context.Response.ContentType = MediaTypeNames.Application.Json;
+				if (error != null) {
+					var msg = CreateExceptionMessage(error);
+					msg.StatusCode = context.Response.StatusCode;
+					await JsonSerializer.SerializeAsync(context.Response.BodyWriter.AsStream(), msg, JsonSerializerOptions);
+				}
 			}
 		}
 
