@@ -39,7 +39,7 @@ namespace Albatross.Hosting {
 		public virtual bool Spa { get; } = false;
 		public virtual bool LogUsage { get; } = true;
 		/// <summary>
-		/// If true, unhandled ArgumentException will create a 400 BadRequest response.
+		/// If true, unhandled ArgumentException throw by controller enpoints will create a 400 BadRequest response.
 		/// </summary>
 		public virtual bool TreatArgumentExceptionAsBadRequest { get; } = true;
 		public Startup(IConfiguration configuration) {
