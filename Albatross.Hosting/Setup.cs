@@ -18,7 +18,8 @@ namespace Albatross.Hosting {
 		string environment { get; init; }
 		protected SetupSerilog setupSerilog;
 
-		public Setup(string[] args) {
+		public Setup(string[] args, bool supressUnhandledArgumentExceptionLogging = false) {
+			this.SupressUnhandledArgumentExceptionLogging = supressUnhandledArgumentExceptionLogging;
 			environment = EnvironmentSetting.ASPNETCORE_ENVIRONMENT.Value;
 			hostBuilder = Host.CreateDefaultBuilder(args).UseSerilog();
 			this.setupSerilog = ConfigureLogging(new SetupSerilog(), environment, args);
@@ -41,7 +42,7 @@ namespace Albatross.Hosting {
 		/// <summary>
 		/// If true, unhandled ArgumentException will be not be logged.  This is useful for public faceing API where the client often send bad request.
 		/// </summary>
-		protected virtual bool SupressUnhandledArgumentExceptionLogging { get; }
+		public bool SupressUnhandledArgumentExceptionLogging { get; private set; }
 		private readonly static ScalarValue ExceptionHandlerMiddlewareSourceContext = new ScalarValue("Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware");
 		protected virtual SetupSerilog ConfigureLogging(SetupSerilog setup, string environment, string[] args) {
 			if (SupressUnhandledArgumentExceptionLogging) {
