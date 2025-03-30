@@ -1,0 +1,28 @@
+{
+	"Serilog": {
+		"MinimumLevel": {
+			"Default": "Information",
+			"Override": {
+				"System": "Error",
+				"Microsoft": "Error"
+			}
+		},
+		"WriteTo": {
+			"Console": {
+				"Name": "Console",
+				"Args": {
+					"outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:sszzz} [{Level:w3}] {SourceContext} {Message:lj}{NewLine}{Exception}"
+				}
+			}
+		},
+		"Using": [
+			"Albatross.Logging"
+		],
+		"Enrich": [
+			"FromLogContext",
+			"WithThreadId",
+			"WithMachineName",
+			"WithErrorMessage"
+		]
+	}
+}

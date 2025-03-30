@@ -39,6 +39,11 @@ namespace Albatross.Hosting {
 		public virtual bool Spa { get; } = false;
 		public virtual bool LogUsage { get; } = true;
 		/// <summary>
+		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
+		/// the response will send back utf8 encoded text
+		/// </summary>
+		public virtual bool PlainTextFormatter { get; } = true;
+		/// <summary>
 		/// If true, unhandled ArgumentException throw by controller enpoints will create a 400 BadRequest response.
 		/// </summary>
 		public virtual bool TreatArgumentExceptionAsBadRequest { get; } = true;
@@ -116,11 +121,13 @@ namespace Albatross.Hosting {
 		public virtual void ConfigureJsonOption(JsonOptions options) { }
 		public virtual void ConfigureServices(IServiceCollection services) {
 			services.TryAddSingleton(provider => provider.GetRequiredService<ILoggerFactory>().CreateLogger("default"));
-			services.TryAddSingleton(provider => new UsageWriter(provider.GetRequiredService<ILoggerFactory>().CreateLogger("Usage")));
+			services.TryAddSingleton(provider => new UsageWriter(provider.GetRequiredService<ILoggerFactory>().CreateLogger("usage")));
 
 			if (WebApi) {
 				services.AddControllers(options => {
-					options.InputFormatters.Add(new PlainTextInputFormatter());
+					if (this.PlainTextFormatter) { 
+						options.InputFormatters.Add(new PlainTextInputFormatter()); 
+					}
 				}).AddJsonOptions(ConfigureJsonOption);
 				services.AddCors(opt => opt.AddDefaultPolicy(ConfigureCors));
 				services.AddAspNetCorePrincipalProvider();
@@ -162,7 +169,7 @@ namespace Albatross.Hosting {
 		protected async Task HandleGlobalExceptions(HttpContext context) {
 			var feature = context.Features.Get<IExceptionHandlerFeature>();
 			var error = feature?.Error;
-			if(TreatArgumentExceptionAsBadRequest && error is ArgumentException) {
+			if (TreatArgumentExceptionAsBadRequest && error is ArgumentException) {
 				context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 			} else {
 				context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;

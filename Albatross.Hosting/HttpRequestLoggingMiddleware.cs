@@ -1,6 +1,7 @@
 ﻿using Albatross.Authentication.AspNetCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading.Tasks;
 
 namespace Albatross.Hosting {
@@ -11,8 +12,8 @@ namespace Albatross.Hosting {
 			Logger = logger;
 		}
 
-		public void Write(UsageData usageData) {
-			Logger.LogInformation("{@data}", usageData);
+		public void Write(UsageData data) {
+			Logger.LogInformation("{user} {remoteAddress} {url} {method}", data.User, data.RemoteIpAddress, data.Url, data.Method);
 		}
 	}
 	public record class UsageData {
@@ -35,7 +36,8 @@ namespace Albatross.Hosting {
 		}
 
 		public async Task InvokeAsync(HttpContext context, UsageWriter writer) {
-			writer.Write(new UsageData(context));
+			var data = new UsageData(context);
+			writer.Write(data);
 			await next(context);
 		}
 	}
