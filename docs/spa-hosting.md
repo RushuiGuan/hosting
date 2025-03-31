@@ -2,13 +2,13 @@
 Albatross.Hosting can host SPAs such as angular projects within itself.  To enable SPA Hosting, following the steps below.
 
 # Features
-1. baseHref support - SPA projects can have different baseHref path based on deployment location.  `Albatross.Hosting` will adjust the baseHref value using configuration so that it can be adjusted automatically by environment.
+1. baseHref support - SPA projects can have different baseHref path based on deployment location.  `Albatross.Hosting` will adjust the baseHref value using configuration so that it can be updated automatically by environment.
 1. config file support - `Albatross.Hosting` supports transformation of config file by environments similar to transformation of `appsettings.json` file in aspnetcore.
 
 # Quick Start
-1. override the `Startup.Spa` property to return true
+1. Override the `Startup.Spa` property to return true
 2. Copy the output of the SPA project to the `wwwroot` folder.
-2. create the following entries in the `appsettings.json` config file
+2. Create the following entries in the `appsettings.json` config file
 	```json
 	{
 		"angular": {
