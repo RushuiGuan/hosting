@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Albatross.Hosting.ExceptionHandling;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Runtime.CompilerServices;
 

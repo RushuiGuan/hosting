@@ -13,13 +13,13 @@
 		<Content Remove="serilog.json" />
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="7.6.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="[8.0.13]" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="[8.0.13]" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="[8.0.13]" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="[8.0.1]" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="[8.0.1]" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="[8.0.1]" />
-		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="7.6.2" />
 		<PackageReference Include="Albatross.Config" Version="7.5.9" />
 		<PackageReference Include="Albatross.Logging" Version="8.0.1" />
 		<PackageReference Include="Albatross.Serialization.Json" Version="8.0.2" />

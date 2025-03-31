@@ -1,11 +1,10 @@
 ﻿using Albatross.Authentication.AspNetCore;
 using Albatross.Config;
+using Albatross.Hosting.ExceptionHandling;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,10 +14,6 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Mime;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Albatross.Hosting {
 	/// <summary>
@@ -29,9 +24,6 @@ namespace Albatross.Hosting {
 
 		protected AuthorizationSetting AuthorizationSetting { get; }
 		protected IConfiguration Configuration { get; }
-		JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions {
-			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-		};
 
 		public virtual bool Swagger { get; } = true;
 		public virtual bool WebApi { get; } = true;
@@ -43,10 +35,7 @@ namespace Albatross.Hosting {
 		/// the response will send back utf8 encoded text
 		/// </summary>
 		public virtual bool PlainTextFormatter { get; } = true;
-		/// <summary>
-		/// If true, unhandled ArgumentException throw by controller enpoints will create a 400 BadRequest response.
-		/// </summary>
-		public virtual bool TreatArgumentExceptionAsBadRequest { get; } = true;
+		
 		public Startup(IConfiguration configuration) {
 			this.Configuration = configuration;
 			Log.Logger.Information("AspNetCore Startup configuration with secured={secured}, spa={spa}, swagger={swagger}, webapi={webapi}, usage={usage}", Secured, Spa, Swagger, WebApi, LogUsage);
@@ -125,8 +114,8 @@ namespace Albatross.Hosting {
 
 			if (WebApi) {
 				services.AddControllers(options => {
-					if (this.PlainTextFormatter) { 
-						options.InputFormatters.Add(new PlainTextInputFormatter()); 
+					if (this.PlainTextFormatter) {
+						options.InputFormatters.Add(new PlainTextInputFormatter());
 					}
 				}).AddJsonOptions(ConfigureJsonOption);
 				services.AddCors(opt => opt.AddDefaultPolicy(ConfigureCors));
@@ -142,8 +131,7 @@ namespace Albatross.Hosting {
 
 		public virtual void Configure(IApplicationBuilder app, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<Startup> logger) {
 			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting, environmentSetting.Value);
-
-			app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandler = HandleGlobalExceptions });
+			app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandler = GlobalExceptionHandler.Handle });
 			app.UseRouting();
 			if (WebApi) {
 				app.UseCors();
@@ -166,31 +154,7 @@ namespace Albatross.Hosting {
 			app.ApplicationServices.GetRequiredService<ITransformAngularConfig>().Transform();
 		}
 
-		protected async Task HandleGlobalExceptions(HttpContext context) {
-			var feature = context.Features.Get<IExceptionHandlerFeature>();
-			var error = feature?.Error;
-			if (TreatArgumentExceptionAsBadRequest && error is ArgumentException) {
-				context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-			} else {
-				context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-			}
-			context.Response.ContentType = MediaTypeNames.Application.Json;
-			if (error != null) {
-				var msg = CreateExceptionMessage(error);
-				msg.StatusCode = context.Response.StatusCode;
-				await JsonSerializer.SerializeAsync(context.Response.BodyWriter.AsStream(), msg, JsonSerializerOptions);
-			}
-		}
-
-		protected virtual ErrorMessage CreateExceptionMessage(Exception error) {
-			var msg = new ErrorMessage {
-				Message = error.Message,
-				Type = error.GetType().FullName,
-			};
-			if (error.InnerException != null) {
-				msg.InnerError = CreateExceptionMessage(error.InnerException);
-			}
-			return msg;
-		}
+		// protected virtual IGlobalExceptionHandler GlobalExceptionHandler{get; } = new ProblemDetailsGlobalExceptionHandler();
+		protected virtual IGlobalExceptionHandler GlobalExceptionHandler { get; } = new DefaultGlobalExceptionHandler();
 	}
 }

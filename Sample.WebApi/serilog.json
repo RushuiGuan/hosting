@@ -11,14 +11,14 @@
             "Console": {
                 "Name": "Console",
                 "Args": {
-                    "outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:sszzz} [{Level:w3}] {SourceContext} {Message:lj}{NewLine}{Exception}"
+                    "outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ssz} {MachineName} {TraceIdentifier} {RequestId} {SourceContext} {ThreadId} [{Level:w3}] {Message:lj}{NewLine}{Exception}"
                 }
             },
             "File": {
                 "Name": "File",
                 "Args": {
                     "path": "%LogDirectory%\\Sample.WebApi\\Sample.WebApi.log",
-                    "outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ssz} {MachineName} {SourceContext} {ThreadId} [{Level:w3}] {Message:lj}{NewLine}{Exception}",
+                    "outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ssz} {MachineName} {RequestId} {SourceContext} {ThreadId} [{Level:w3}] {Message:lj}{NewLine}{Exception}",
                     "rollingInterval": "Day"
                 }
             },
@@ -27,7 +27,7 @@
                 "Args": {
                     "SlackSinkOptions": "Albatross.Logging.SinkOptions::SlackSink, Albatross.Logging",
                     "restrictedToMinimumLevel": "Error",
-                    "outputTemplate": ":turkey: sample.Hosting.api {Timestamp:yyyy-MM-dd HH:mm:ssz} {MachineName} {SourceContext} {ThreadId} [{Level:w3}] {Message:lj}{ErrorMessage}"
+                    "outputTemplate": ":turkey: Sample.WebApi {Timestamp:yyyy-MM-dd HH:mm:ssz} {MachineName} {RequestId} {SourceContext} {ThreadId} [{Level:w3}] {Message:lj}{ErrorMessage}"
                 }
             }
         },
