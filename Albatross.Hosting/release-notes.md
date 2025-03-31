@@ -1,5 +1,8 @@
-# 8.0.2
-* Add the functionality to treat unhandled `ArgumentException` as a 400 error.  The feature is enabled by default.  Set the `TreatArgumentExceptionAsBadRequest` property of the `Startup` base class to false to disable.  The logging of the 'ArgumentException' can also be disabled by setting the `Setup.SupressUnhandledArgumentExceptionLogging` flag to true
+# 8.0.3
+* Create a property GlbobalExceptionHandler and ways to customize it
+* Add the functionality to treat unhandled `ArgumentException` as a 400 error
+* The logging of the 'ArgumentException' can also be disabled by setting the `Setup.SupressUnhandledArgumentExceptionLogging` flag to true
+* Add lots of documentation
 # 8.0.0
 The last change was a breaking change.  Bump the major version number.
 # 7.6.2
