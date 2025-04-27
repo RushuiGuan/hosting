@@ -2,6 +2,8 @@
 using Albatross.Config;
 using Albatross.Hosting.ExceptionHandling;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
@@ -10,10 +12,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Albatross.Hosting {
 	/// <summary>
@@ -21,25 +25,24 @@ namespace Albatross.Hosting {
 	/// </summary>
 	public class Startup {
 		public const string DefaultApp_RootPath = "wwwroot";
-
-		protected AuthorizationSetting AuthorizationSetting { get; }
 		protected IConfiguration Configuration { get; }
-
+		protected AuthenticationSettings AuthenticationSettings { get; }
 		public virtual bool Swagger { get; } = true;
 		public virtual bool WebApi { get; } = true;
-		public virtual bool Secured { get; } = false;
 		public virtual bool Spa { get; } = false;
 		public virtual bool LogUsage { get; } = true;
+
 		/// <summary>
 		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
 		/// the response will send back utf8 encoded text
 		/// </summary>
 		public virtual bool PlainTextFormatter { get; } = true;
-		
+
 		public Startup(IConfiguration configuration) {
 			this.Configuration = configuration;
-			Log.Logger.Information("AspNetCore Startup configuration with secured={secured}, spa={spa}, swagger={swagger}, webapi={webapi}, usage={usage}", Secured, Spa, Swagger, WebApi, LogUsage);
-			AuthorizationSetting = new AuthorizationSetting(configuration);
+			this.AuthenticationSettings = new AuthenticationSettings(configuration);
+			this.AuthenticationSettings.Validate();
+			Log.Logger.Information("AspNetCore Startup configuration with authentication={secured}, spa={spa}, swagger={swagger}, webapi={webapi}, usage={usage}", this.AuthenticationSettings.HasAny, Spa, Swagger, WebApi, LogUsage);
 		}
 
 		protected virtual void ConfigureCors(CorsPolicyBuilder builder) {
@@ -52,53 +55,69 @@ namespace Albatross.Hosting {
 		}
 
 		#region swagger
+
 		public virtual IServiceCollection AddSwagger(IServiceCollection services) {
-			services.AddSwaggerGen(c => {
-				c.SwaggerDoc("v1", new OpenApiInfo { Title = new ProgramSetting(this.Configuration).App, Version = "v1" });
+			services.AddSwaggerGen(options => {
+				options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
+					Name = "Authorization",
+					Type = SecuritySchemeType.Http,
+					Scheme = "Bearer",
+					BearerFormat = "JWT",
+					In = ParameterLocation.Header,
+					Description = "Enter your JWT token like this: Bearer {your token}"
+				});
+				options.AddSecurityRequirement(new OpenApiSecurityRequirement {
+					{
+						new OpenApiSecurityScheme {
+							Reference = new OpenApiReference {
+								Type = ReferenceType.SecurityScheme,
+								Id = "Bearer"
+							}
+						},
+						new string[] { }
+					}
+				});
 			});
 			return services;
 		}
-		public virtual void UseSwagger(IApplicationBuilder app, ProgramSetting programSetting) {
+
+		public virtual void UseSwagger(IApplicationBuilder app) {
 			app.UseSwagger();
 			app.UseSwaggerUI(c => c.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object> {
 				["activated"] = false
 			});
 		}
+
 		#endregion
 
 		#region authorization
-		protected virtual void ConfigureAuthorization(AuthorizationOptions option) {
-			foreach (var policy in this.AuthorizationSetting.Policies ?? new AuthorizationPolicy[0]) {
-				option.AddPolicy(policy.Name, builder => BuildAuthorizationPolicy(builder, policy));
-			}
-		}
 
-		private void BuildAuthorizationPolicy(AuthorizationPolicyBuilder builder, AuthorizationPolicy policy) {
-			if (policy.Roles?.Length > 0) {
-				builder.RequireRole(policy.Roles);
-			}
-		}
+		protected virtual void ConfigureAuthorization(AuthorizationOptions option) { }
 
 		public virtual IServiceCollection AddAccessControl(IServiceCollection services) {
-			services.AddConfig<AuthorizationSetting>();
-			services.AddAuthorization(ConfigureAuthorization);
-			AuthenticationBuilder builder = services.AddAuthentication(AuthorizationSetting.Authentication);
-
-			if (AuthorizationSetting.IsKerborosAuthentication) {
-				builder.AddNegotiate();
-			} else if (AuthorizationSetting.IsBearerAuthentication) {
-				builder.AddJwtBearer(AuthorizationSetting.BearerAuthenticationScheme, options => {
-					options.Authority = AuthorizationSetting.Authority;
-					options.Audience = AuthorizationSetting.Audience;
-					options.RequireHttpsMetadata = false;
-					options.IncludeErrorDetails = true;
-					options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters {
-						ValidateIssuerSigningKey = false,
-					};
-				});
+			if (this.AuthenticationSettings.UseKerboros) {
+				services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 			}
+			if(this.AuthenticationSettings.BearerTokens.Any()) {
+				var builder = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
+				foreach (var token in this.AuthenticationSettings.BearerTokens) {
+					builder.AddJwtBearer(token.Provider, options => {
+						options.Authority = token.Authority;
+						options.IncludeErrorDetails = true;
+						options.TokenValidationParameters = new TokenValidationParameters {
+							ValidateIssuer = token.ValidateIssuer,
+							ValidIssuer = token.Issuer,
+							ValidateAudience = token.ValidateAudience,
+							ValidAudience = token.Audience,
+							ValidateLifetime = token.ValidateLifetime,
+						};
+					});
+				}
+			}
+			services.AddAuthorization(ConfigureAuthorization);
 			return services;
 		}
+
 		#endregion
 
 		public IServiceCollection AddSpa(IServiceCollection services) {
@@ -107,11 +126,12 @@ namespace Albatross.Hosting {
 			services.AddSingleton<ITransformAngularConfig, TransformAngularConfig>();
 			return services;
 		}
+
 		public virtual void ConfigureJsonOption(JsonOptions options) { }
+
 		public virtual void ConfigureServices(IServiceCollection services) {
 			services.TryAddSingleton(provider => provider.GetRequiredService<ILoggerFactory>().CreateLogger("default"));
 			services.TryAddSingleton(provider => new UsageWriter(provider.GetRequiredService<ILoggerFactory>().CreateLogger("usage")));
-
 			if (WebApi) {
 				services.AddControllers(options => {
 					if (this.PlainTextFormatter) {
@@ -121,12 +141,12 @@ namespace Albatross.Hosting {
 				services.AddCors(opt => opt.AddDefaultPolicy(ConfigureCors));
 				services.AddAspNetCorePrincipalProvider();
 				if (Swagger) {
-					services.AddMvc();
+					// services.AddMvc();
 					AddSwagger(services);
 				}
 			}
 			if (Spa) { AddSpa(services); }
-			if (Secured) { AddAccessControl(services); }
+			if (this.AuthenticationSettings.HasAny) { AddAccessControl(services); }
 		}
 
 		public virtual void Configure(IApplicationBuilder app, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<Startup> logger) {
@@ -135,11 +155,11 @@ namespace Albatross.Hosting {
 			app.UseRouting();
 			if (WebApi) {
 				app.UseCors();
-				if (Secured) { app.UseAuthentication().UseAuthorization(); }
+				if (this.AuthenticationSettings.HasAny) { app.UseAuthentication().UseAuthorization(); }
 				if (this.LogUsage) { app.UseMiddleware<HttpRequestLoggingMiddleware>(); }
 				app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 			}
-			if (WebApi && Swagger) { UseSwagger(app, programSetting); }
+			if (WebApi && Swagger) { UseSwagger(app); }
 			if (Spa) { UseSpa(app, logger); }
 		}
 
