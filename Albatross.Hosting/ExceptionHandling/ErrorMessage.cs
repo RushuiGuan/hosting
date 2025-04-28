@@ -5,6 +5,7 @@ namespace Albatross.Hosting.ExceptionHandling {
 	/// similar to ProblemDetails, but with a different structure.  This class is used as the default structure for error responses due to
 	/// legacy support.
 	/// </summary>
+	[Obsolete]
 	public class ErrorMessage {
 		public string? Message { get; set; }
 		public string? Type { get; set; }

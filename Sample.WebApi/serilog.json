@@ -3,8 +3,8 @@
         "MinimumLevel": {
             "Default": "Information",
             "Override": {
-                "System": "Error",
-                "Microsoft": "Error"
+                "System": "Information",
+                "Microsoft": "Information"
             }
         },
         "WriteTo": {

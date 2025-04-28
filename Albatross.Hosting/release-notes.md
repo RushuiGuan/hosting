@@ -1,3 +1,5 @@
+# 8.0.5
+Add standard jwt token support
 # 8.0.3
 * Create a property GlbobalExceptionHandler and ways to customize it
 * Add the functionality to treat unhandled `ArgumentException` as a 400 error

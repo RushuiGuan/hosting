@@ -1,7 +1,6 @@
 ﻿using Albatross.Authentication.AspNetCore;
 using Albatross.Config;
 using Albatross.Hosting.ExceptionHandling;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System;
@@ -58,25 +56,29 @@ namespace Albatross.Hosting {
 
 		public virtual IServiceCollection AddSwagger(IServiceCollection services) {
 			services.AddSwaggerGen(options => {
-				options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
-					Name = "Authorization",
-					Type = SecuritySchemeType.Http,
-					Scheme = "Bearer",
-					BearerFormat = "JWT",
-					In = ParameterLocation.Header,
-					Description = "Enter your JWT token like this: Bearer {your token}"
-				});
-				options.AddSecurityRequirement(new OpenApiSecurityRequirement {
-					{
-						new OpenApiSecurityScheme {
-							Reference = new OpenApiReference {
-								Type = ReferenceType.SecurityScheme,
-								Id = "Bearer"
+				if (this.AuthenticationSettings.BearerTokens.Any()) {
+					options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
+						Name = "Authorization",
+						Type = SecuritySchemeType.Http,
+						Scheme = "Bearer",
+						BearerFormat = "JWT",
+						In = ParameterLocation.Header,
+						Description = "Enter your JWT token. Do not prefix the token with 'Bearer: '"
+					});
+					options.AddSecurityRequirement(
+						new OpenApiSecurityRequirement {
+							{
+								new OpenApiSecurityScheme {
+									Reference = new OpenApiReference {
+										Type = ReferenceType.SecurityScheme,
+										Id = "Bearer"
+									}
+								},
+								new string[] { }
 							}
-						},
-						new string[] { }
-					}
-				});
+						}
+					);
+				}
 			});
 			return services;
 		}
@@ -90,34 +92,25 @@ namespace Albatross.Hosting {
 
 		#endregion
 
-		#region authorization
-
-		protected virtual void ConfigureAuthorization(AuthorizationOptions option) { }
-
+		#region authentication and authorization
 		public virtual IServiceCollection AddAccessControl(IServiceCollection services) {
-			if (this.AuthenticationSettings.UseKerboros) {
+			if (this.AuthenticationSettings.UseKerberos) {
 				services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 			}
-			if(this.AuthenticationSettings.BearerTokens.Any()) {
+			if (this.AuthenticationSettings.BearerTokens.Any()) {
 				var builder = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
-				foreach (var token in this.AuthenticationSettings.BearerTokens) {
-					builder.AddJwtBearer(token.Provider, options => {
-						options.Authority = token.Authority;
-						options.IncludeErrorDetails = true;
-						options.TokenValidationParameters = new TokenValidationParameters {
-							ValidateIssuer = token.ValidateIssuer,
-							ValidIssuer = token.Issuer,
-							ValidateAudience = token.ValidateAudience,
-							ValidAudience = token.Audience,
-							ValidateLifetime = token.ValidateLifetime,
-						};
-					});
+				if (this.AuthenticationSettings.BearerTokens.Length == 1) {
+					builder.AddJwtBearer(this.AuthenticationSettings.BearerTokens[0].SetJwtBearerOptions);
+				} else {
+					foreach (var token in this.AuthenticationSettings.BearerTokens) {
+						builder.AddJwtBearer(token.Provider, token.SetJwtBearerOptions);
+					}
 				}
 			}
 			services.AddAuthorization(ConfigureAuthorization);
 			return services;
 		}
-
+		protected virtual void ConfigureAuthorization(AuthorizationOptions option) { }
 		#endregion
 
 		public IServiceCollection AddSpa(IServiceCollection services) {
@@ -141,7 +134,6 @@ namespace Albatross.Hosting {
 				services.AddCors(opt => opt.AddDefaultPolicy(ConfigureCors));
 				services.AddAspNetCorePrincipalProvider();
 				if (Swagger) {
-					// services.AddMvc();
 					AddSwagger(services);
 				}
 			}
@@ -174,7 +166,9 @@ namespace Albatross.Hosting {
 			app.ApplicationServices.GetRequiredService<ITransformAngularConfig>().Transform();
 		}
 
-		// protected virtual IGlobalExceptionHandler GlobalExceptionHandler{get; } = new ProblemDetailsGlobalExceptionHandler();
+		/// <summary>
+		/// for legacy systems, override this method to use <see cref="LegacyGobalExceptionHandler"/>
+		/// </summary>
 		protected virtual IGlobalExceptionHandler GlobalExceptionHandler { get; } = new DefaultGlobalExceptionHandler();
 	}
 }

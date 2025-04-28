@@ -17,7 +17,13 @@ namespace Albatross.Hosting.ExceptionHandling {
 		}
 
 		public virtual object ConvertToObject(HttpContext context, int statusCode, Exception exception) {
-			return new ErrorMessage(statusCode, exception);
+			return new ProblemDetailsWithTraceId {
+				Status = statusCode,
+				Title = "An error occurred while processing your request",
+				Detail = exception.Message,
+				Type = exception.GetType().FullName,
+				TraceId = context.TraceIdentifier,
+			};
 		}
 	}
 }
