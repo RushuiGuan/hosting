@@ -9,12 +9,12 @@ namespace Albatross.Hosting {
 	[ApiController]
 	public class AppInfoController : ControllerBase {
 		private readonly ProgramSetting programSetting;
-		private readonly IGetCurrentUser getCurrentUser;
+		private readonly IGetCurrentLogin getCurrentLogin;
 		private readonly EnvironmentSetting environmentSetting;
 
-		public AppInfoController(ProgramSetting programSetting, IGetCurrentUser getCurrentUser, EnvironmentSetting environmentSetting) {
+		public AppInfoController(ProgramSetting programSetting, IGetCurrentLogin getCurrentLogin, EnvironmentSetting environmentSetting) {
 			this.programSetting = programSetting;
-			this.getCurrentUser = getCurrentUser;
+			this.getCurrentLogin = getCurrentLogin;
 			this.environmentSetting = environmentSetting;
 		}
 
@@ -24,12 +24,10 @@ namespace Albatross.Hosting {
 		[HttpGet("env")]
 		public EnvironmentSetting GetEnvironment() => environmentSetting;
 
-		[Authorize]
 		[HttpGet("user-claim")]
 		public string[] GetUserClaims() => HttpContext.User?.Claims?.Select(args => $"{args.Type}: {args.Value}")?.ToArray() ?? new string[0];
 
-		[Authorize]
-		[HttpGet("user")]
-		public string GetCurrentUser() => getCurrentUser.Get();
+		[HttpGet("login")]
+		public Login? GetCurrentUser() => getCurrentLogin.Get();
 	}
 }
