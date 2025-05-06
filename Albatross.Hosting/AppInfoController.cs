@@ -1,6 +1,5 @@
 ﻿using Albatross.Authentication;
 using Albatross.Config;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 
@@ -28,6 +27,6 @@ namespace Albatross.Hosting {
 		public string[] GetUserClaims() => HttpContext.User?.Claims?.Select(args => $"{args.Type}: {args.Value}")?.ToArray() ?? new string[0];
 
 		[HttpGet("login")]
-		public Login? GetCurrentUser() => getCurrentLogin.Get();
+		public ILogin? GetCurrentUser() => getCurrentLogin.Get();
 	}
 }
