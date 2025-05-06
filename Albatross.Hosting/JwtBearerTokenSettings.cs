@@ -10,6 +10,7 @@ namespace Albatross.Hosting {
 		public bool ValidateAudience { get; set; } = true;
 		public bool ValidateLifetime { get; set; } = true;
 		public string? Issuer { get; set; }
+		public bool RequireHttpsMetadata { get; set; } = true;
 		/// <summary>
 		/// AKA ClientId
 		/// </summary>
@@ -30,6 +31,7 @@ namespace Albatross.Hosting {
 		public void SetJwtBearerOptions(JwtBearerOptions options) {
 			options.Authority = Authority;
 			options.IncludeErrorDetails = true;
+			options.RequireHttpsMetadata = RequireHttpsMetadata;
 			options.TokenValidationParameters = new TokenValidationParameters {
 				ValidateIssuer = ValidateIssuer,
 				ValidIssuer = Issuer,
