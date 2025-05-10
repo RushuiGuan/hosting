@@ -14,7 +14,7 @@ namespace Albatross.Hosting {
 		/// <summary>
 		/// AKA ClientId
 		/// </summary>
-		public string? Audience { get; set; }
+		public string[] Audience { get; set; } = [];
 
 		public void Validate() {
 			if (string.IsNullOrEmpty(Authority)) {
@@ -23,7 +23,7 @@ namespace Albatross.Hosting {
 			if (ValidateIssuer && string.IsNullOrEmpty(Issuer)) {
 				throw new ArgumentException("Issuer is required");
 			}
-			if (ValidateAudience && string.IsNullOrEmpty(Audience)) {
+			if (ValidateAudience && Audience.Length == 0) {
 				throw new ArgumentException("Audience is required");
 			}
 		}
@@ -36,7 +36,8 @@ namespace Albatross.Hosting {
 				ValidateIssuer = ValidateIssuer,
 				ValidIssuer = Issuer,
 				ValidateAudience = ValidateAudience,
-				ValidAudience = Audience,
+				ValidAudience = Audience.Length == 1 ? Audience[0] : null,
+				ValidAudiences = Audience?.Length > 1 ? Audience : null,
 				ValidateLifetime = ValidateLifetime,
 			};
 		}
