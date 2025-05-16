@@ -94,17 +94,17 @@ namespace Albatross.Hosting {
 
 		#region authentication and authorization
 		public virtual IServiceCollection AddAccessControl(IServiceCollection services) {
-			if (this.AuthenticationSettings.UseKerberos) {
-				services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-			}
-			if (this.AuthenticationSettings.BearerTokens.Any()) {
-				var builder = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
-				if (this.AuthenticationSettings.BearerTokens.Length == 1) {
-					builder.AddJwtBearer(this.AuthenticationSettings.BearerTokens[0].SetJwtBearerOptions);
-				} else {
-					foreach (var token in this.AuthenticationSettings.BearerTokens) {
-						builder.AddJwtBearer(token.Provider, token.SetJwtBearerOptions);
+			if (this.AuthenticationSettings.UseKerberos || this.AuthenticationSettings.BearerTokens.Any()) {
+				var builder = services.AddAuthentication(option => {
+					if (!string.IsNullOrEmpty(AuthenticationSettings.Default)) {
+						option.DefaultScheme = this.AuthenticationSettings.Default;
 					}
+				});
+				foreach (var token in this.AuthenticationSettings.BearerTokens) {
+					builder.AddJwtBearer(token.Provider, token.SetJwtBearerOptions);
+				}
+				if (this.AuthenticationSettings.UseKerberos) {
+					builder.AddNegotiate();
 				}
 			}
 			services.AddAuthorization(ConfigureAuthorization);

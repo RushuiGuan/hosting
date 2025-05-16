@@ -1,5 +1,6 @@
 ﻿using Albatross.Authentication;
 using Albatross.Config;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 
@@ -22,11 +23,5 @@ namespace Albatross.Hosting {
 
 		[HttpGet("env")]
 		public EnvironmentSetting GetEnvironment() => environmentSetting;
-
-		[HttpGet("user-claim")]
-		public string[] GetUserClaims() => HttpContext.User?.Claims?.Select(args => $"{args.Type}: {args.Value}")?.ToArray() ?? new string[0];
-
-		[HttpGet("login")]
-		public ILogin? GetCurrentUser() => getCurrentLogin.Get();
 	}
 }

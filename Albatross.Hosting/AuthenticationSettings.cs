@@ -7,6 +7,7 @@ namespace Albatross.Hosting {
 		public AuthenticationSettings(IConfiguration configuration) : base(configuration) {
 		}
 
+		public string? Default { get; set; }
 		public bool UseKerberos { get; set; }
 		public JwtBearerTokenSettings[] BearerTokens { get; set; } = [];
 		
