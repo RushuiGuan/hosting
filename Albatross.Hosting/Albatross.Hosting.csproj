@@ -10,7 +10,7 @@
 		<PackageProjectUrl>$(RepositoryProjectRoot)/Albatross.Hosting</PackageProjectUrl>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="7.6.5" />
+		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="7.6.6-26.main" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.5" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.5" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.5" />
