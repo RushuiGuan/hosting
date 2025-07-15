@@ -1,3 +1,6 @@
+# 9.0.0
+Align version with dotnet sdk.
+Reference dotnet 9 libraries
 # 8.0.5
 Add standard jwt token support
 # 8.0.3

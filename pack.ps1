@@ -30,10 +30,10 @@ if (-not [System.IO.File]::Exists("$root/.projects")) {
 	Write-Error ".projects file not found"
 }
 
-$testProjects = devtools project-list -f "$root/.projects" -h tests
+$testProjects = devtools project list -f "$root/.projects" -h tests
 Write-Information "Test projects: $($testProjects -join ', ')"
 
-$projects = devtools project-list -f "$root/.projects" -h packages
+$projects = devtools project list -f "$root/.projects" -h packages
 Write-Information "Projects: $($projects -join ', ')"
 
 if (-not $skipTest) {
@@ -53,7 +53,7 @@ if ($projects.Length -eq 0) {
 }
 
 $isDirty = $false;
-devtools is-dirty -d $root
+devtools git is-dirty -d $root
 if ($LASTEXITCODE -ne 0) {
 	$isDirty = $true;
 }
@@ -65,8 +65,8 @@ if ($prod -and -not $force -and $isDirty) {
 if ($tag -and $isDirty) {
 	Write-Error "Directory is dirty. Please commit or stash changes before tagging"
 }
-$oldVersion = devtools read-project-property -f $root/Directory.Build.props -p Version
-$version = devtools project-version --directory-build-props -d $root -p="$prod"
+$oldVersion = devtools project read-property -f $root/Directory.Build.props -p Version
+$version = devtools project version --directory-build-props -d $root -p="$prod"
 if ($LASTEXITCODE -ne 0) {
 	Write-Error "Unable to get project version"
 }
@@ -79,9 +79,9 @@ try {
 		Get-ChildItem $root/artifacts/*.nupkg | Remove-Item -Force
 	}
 	Write-Information "Version: $version";
-	devtools set-project-version -d $root -ver $version
+	devtools project set-version -d $root -ver $version
 	
-	$repositoryProjectRoot = devtools read-project-property -f $PSScriptRoot/Directory.Build.props -p RepositoryUrl
+	$repositoryProjectRoot = devtools project read-property -f $PSScriptRoot/Directory.Build.props -p RepositoryUrl
 	if ($LASTEXITCODE -ne 0) {
 		Write-Error "Unable to read RepositoryUrl from the Directory.Build.props file";
 	} else {
@@ -94,7 +94,7 @@ try {
 		Copy-Item $readme $tmp -Force
 		try {
 			if ([System.IO.File]::Exists($readme)) {
-				devtools fix-markdown-relative-urls --markdown-file $readme --root-folder $PSScriptRoot --root-url $repositoryProjectRoot
+				devtools project fix-markdown-relative-urls --markdown-file $readme --root-folder $PSScriptRoot --root-url $repositoryProjectRoot
 				if ($LASTEXITCODE -ne 0) {
 					Write-Error "Unable to fix the README.md file for $project"
 				}
@@ -110,10 +110,10 @@ try {
 			Remove-Item $tmp -Force
 		}
 	}
-	devtools set-project-version -d $root -ver $oldVersion
+	devtools project set-version -d $root -ver $oldVersion
 	if ($tag -and $projects.Length -ne 0) {
 		$directoryName = Split-Path $root -Leaf
-		$version = devtools build-version -ver $version -clear-meta
+		$version = devtools version build -ver $version -clear-meta
 		if ($LASTEXITCODE -ne 0) {
 			Write-Error "Error removing meta from version";
 		}
@@ -122,12 +122,12 @@ try {
 		git tag $tagText;
 		if($prod){
 			#if it is a prod build and tagged, bump the version to the next patch
-			$version = devtools build-version -ver $version --next-patch -clear-pre -clear-meta
+			$version = devtools version build -ver $version --next-patch -clear-pre -clear-meta
 			if ($LASTEXITCODE -ne 0) {
 				Write-Error "Error bumping version";
 			}
-			devtools set-project-version -d $root -ver $version
-			devtools format-xml -f $root/Directory.Build.props
+			devtools project set-version -d $root -ver $version
+			devtools xml format -f $root/Directory.Build.props
 			git commit -m "Bump version of $directoryName to $version" $root/Directory.Build.props;
 		}
 	}
@@ -136,8 +136,8 @@ try {
 	}
 }
 finally {
-	devtools format-xml -f $root/Directory.Build.props
+	devtools xml format -f $root/Directory.Build.props
 	Get-ChildItem $root/*.csproj -recurse | ForEach-Object { 
-		devtools format-xml -f $_.FullName
+		devtools xml format -f $_.FullName
 	}
 }
