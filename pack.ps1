@@ -65,7 +65,7 @@ if ($prod -and -not $force -and $isDirty) {
 if ($tag -and $isDirty) {
 	Write-Error "Directory is dirty. Please commit or stash changes before tagging"
 }
-$oldVersion = devtools project read-property -f $root/Directory.Build.props -p Version
+$oldVersion = devtools project property -f $root/Directory.Build.props -p Version
 $version = devtools project version --directory-build-props -d $root -p="$prod"
 if ($LASTEXITCODE -ne 0) {
 	Write-Error "Unable to get project version"
@@ -81,7 +81,7 @@ try {
 	Write-Information "Version: $version";
 	devtools project set-version -d $root -ver $version
 	
-	$repositoryProjectRoot = devtools project read-property -f $PSScriptRoot/Directory.Build.props -p RepositoryUrl
+	$repositoryProjectRoot = devtools project property -f $PSScriptRoot/Directory.Build.props -p RepositoryUrl
 	if ($LASTEXITCODE -ne 0) {
 		Write-Error "Unable to read RepositoryUrl from the Directory.Build.props file";
 	} else {
