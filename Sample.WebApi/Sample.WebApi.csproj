@@ -19,8 +19,8 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <Content Update="schema.angular-config.json">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </Content>
+		<Content Update="schema.angular-config.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 </Project>
