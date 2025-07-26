@@ -17,7 +17,7 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.7" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.7" />
-		<PackageReference Include="Albatross.Config" Version="9.0.0" />
+		<PackageReference Include="Albatross.Config" Version="9.0.1-7.main" />
 		<PackageReference Include="Albatross.Logging" Version="9.0.0" />
 		<PackageReference Include="Albatross.Serialization.Json" Version="9.0.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
