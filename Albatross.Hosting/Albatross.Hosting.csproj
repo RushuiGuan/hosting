@@ -4,23 +4,23 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<Nullable>enable</Nullable>
-		<IsPackable>true</IsPackable>
 		<OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
 		<Description>A library for creating .Net Web Api or Service applications with preconfigured settings</Description>
 		<PackageProjectUrl>$(RepositoryProjectRoot)/Albatross.Hosting</PackageProjectUrl>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="9.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.7" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.7" />
-		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.7" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.7" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.7" />
-		<PackageReference Include="Albatross.Config" Version="9.0.1-7.main" />
+		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="9.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.8" />
+		<PackageReference Include="Albatross.Config" Version="9.0.1-9.main" />
 		<PackageReference Include="Albatross.Logging" Version="9.0.0" />
 		<PackageReference Include="Albatross.Serialization.Json" Version="9.0.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="..\icon.png">

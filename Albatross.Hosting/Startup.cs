@@ -16,6 +16,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Albatross.Hosting {
 	/// <summary>
@@ -54,39 +55,49 @@ namespace Albatross.Hosting {
 
 		#region swagger
 
-		public virtual IServiceCollection AddSwagger(IServiceCollection services) {
-			services.AddSwaggerGen(options => {
+		public virtual IServiceCollection AddOpenApi(IServiceCollection services) {
+			services.AddOpenApi(options => {
 				if (this.AuthenticationSettings.BearerTokens.Any()) {
-					options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
-						Name = "Authorization",
-						Type = SecuritySchemeType.Http,
-						Scheme = "Bearer",
-						BearerFormat = "JWT",
-						In = ParameterLocation.Header,
-						Description = "Enter your JWT token. Do not prefix the token with 'Bearer: '"
-					});
-					options.AddSecurityRequirement(
-						new OpenApiSecurityRequirement {
-							{
+					options.AddDocumentTransformer((doc, context, cancellationToken) => {
+						doc.Components = doc.Components ?? new OpenApiComponents();
+						doc.Components.SecuritySchemes ??= new Dictionary<string, OpenApiSecurityScheme>();
+						doc.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme {
+							Name = "Authorization",
+							Type = SecuritySchemeType.Http,
+							Scheme = "Bearer",
+							BearerFormat = "JWT",
+							In = ParameterLocation.Header,
+							Description = "Enter your JWT token. Do not prefix the token with 'Bearer: '"
+						};
+						doc.SecurityRequirements ??= new List<OpenApiSecurityRequirement>();
+						doc.SecurityRequirements.Add(new OpenApiSecurityRequirement {
+							{ 
 								new OpenApiSecurityScheme {
-									Reference = new OpenApiReference {
-										Type = ReferenceType.SecurityScheme,
+									Reference = new OpenApiReference { 
+										Type = ReferenceType.SecurityScheme, 
 										Id = "Bearer"
 									}
 								},
 								new string[] { }
 							}
-						}
-					);
+						});
+						return Task.CompletedTask;
+					});
 				}
 			});
 			return services;
 		}
 
-		public virtual void UseSwagger(IApplicationBuilder app) {
-			app.UseSwagger();
-			app.UseSwaggerUI(c => c.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object> {
-				["activated"] = false
+		public virtual void UseOpenApi(IApplicationBuilder app) {
+			app.UseEndpoints(endpoints => {
+				endpoints.MapOpenApi("/openapi/v1.json");
+			});
+			app.UseSwaggerUI(config => {
+				var program = app.ApplicationServices.GetRequiredService<ProgramSetting>();
+				config.SwaggerEndpoint("/openapi/v1.json", program.App);
+				config.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object> {
+					["activated"] = false
+				};
 			});
 		}
 
@@ -134,7 +145,7 @@ namespace Albatross.Hosting {
 				services.AddCors(opt => opt.AddDefaultPolicy(ConfigureCors));
 				services.AddAspNetCorePrincipalProvider();
 				if (Swagger) {
-					AddSwagger(services);
+					AddOpenApi(services);
 				}
 			}
 			if (Spa) { AddSpa(services); }
@@ -151,7 +162,7 @@ namespace Albatross.Hosting {
 				if (this.LogUsage) { app.UseMiddleware<HttpRequestLoggingMiddleware>(); }
 				app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 			}
-			if (WebApi && Swagger) { UseSwagger(app); }
+			if (WebApi && Swagger) { UseOpenApi(app); }
 			if (Spa) { UseSpa(app, logger); }
 		}
 

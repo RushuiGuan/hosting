@@ -3,8 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Albatross.Hosting {
 	public class AuthenticationSettings : ConfigBase {
-		public AuthenticationSettings(IConfiguration configuration) : base(configuration, "authentication") {
-		}
+		public AuthenticationSettings(IConfiguration configuration) : base(configuration, "authentication") { }
 
 		public string? Default { get; set; }
 		public bool UseKerberos { get; set; }
