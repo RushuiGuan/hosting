@@ -3,11 +3,8 @@ using Microsoft.Extensions.Configuration;
 
 namespace Albatross.Hosting {
 	public class AngularConfig : ConfigBase {
-		public AngularConfig(IConfiguration configuration) : base(configuration) {
+		public AngularConfig(IConfiguration configuration) : base(configuration, "angular") {
 		}
-
-		public override string Key => "angular";
-
 		public string[] ConfigFile { get; set; } = new string[0];
 		public string[] BaseHrefFile { get; set; } = new string[0];
 		/// <summary>
@@ -21,6 +18,5 @@ namespace Albatross.Hosting {
 		/// For example, if the angular path is: http://localhost/demo/ui  The BaseHref should be /demo/ui/
 		/// </summary>
 		public string BaseHref { get; set; } = "/";
-
 	}
 }

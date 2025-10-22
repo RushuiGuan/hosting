@@ -8,6 +8,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\Albatross.Hosting\Albatross.Hosting.csproj" />
+		<PackageReference Include="NJsonSchema" Version="11.4.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="appsettings*.json">
@@ -16,5 +17,10 @@
 		<None Include="serilog*.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Update="schema.angular-config.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 </Project>

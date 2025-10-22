@@ -1,0 +1,93 @@
+{
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "appsettings",
+	"type": "object",
+	"additionalProperties": true,
+	"properties": {
+		"angular": {
+			"title": "angular",
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"configFile": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"baseHrefFile": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"requestPath": {
+					"type": "string"
+				},
+				"baseHref": {
+					"type": "string"
+				}
+			}
+		},
+		"authentication": {
+			"title": "AuthenticationSettings",
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"default": {
+					"type": [
+						"null",
+						"string"
+					]
+				},
+				"useKerberos": {
+					"type": "boolean"
+				},
+				"bearerTokens": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/JwtBearerTokenSettings"
+					}
+				}
+			}
+		}
+	},
+	"definitions": {
+		"JwtBearerTokenSettings": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"provider": {
+					"type": "string"
+				},
+				"authority": {
+					"type": "string"
+				},
+				"validateIssuer": {
+					"type": "boolean"
+				},
+				"validateAudience": {
+					"type": "boolean"
+				},
+				"validateLifetime": {
+					"type": "boolean"
+				},
+				"issuer": {
+					"type": [
+						"null",
+						"string"
+					]
+				},
+				"requireHttpsMetadata": {
+					"type": "boolean"
+				},
+				"audience": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}
