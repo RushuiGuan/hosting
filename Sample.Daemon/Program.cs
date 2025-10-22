@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace Sample.Daemon {
 	public class Program {
 		public static Task Main(string[] args) {
-			System.Environment.CurrentDirectory = AppContext.BaseDirectory;
+			Albatross.Logging.Extensions.RemoveLegacySlackSinkOptions();
 			return new MySetup(args)
 				.ConfigureServiceHost<MyHostedService>()
 				.RunAsService()

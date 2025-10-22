@@ -53,8 +53,7 @@ namespace Albatross.Hosting {
 		}
 
 		#region swagger
-
-		public virtual IServiceCollection AddSwagger(IServiceCollection services) {
+		protected virtual IServiceCollection AddSwagger(IServiceCollection services) {
 			services.AddSwaggerGen(options => {
 				if (this.AuthenticationSettings.BearerTokens.Any()) {
 					options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
@@ -83,7 +82,7 @@ namespace Albatross.Hosting {
 			return services;
 		}
 
-		public virtual void UseSwagger(IApplicationBuilder app) {
+		protected virtual void UseSwagger(IApplicationBuilder app) {
 			app.UseSwagger();
 			app.UseSwaggerUI(c => c.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object> {
 				["activated"] = false
