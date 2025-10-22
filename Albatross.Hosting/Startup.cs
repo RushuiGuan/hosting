@@ -26,10 +26,10 @@ namespace Albatross.Hosting {
 		public const string DefaultApp_RootPath = "wwwroot";
 		protected IConfiguration Configuration { get; }
 		protected AuthenticationSettings AuthenticationSettings { get; }
-		public virtual bool Swagger { get; } = true;
-		public virtual bool WebApi { get; } = true;
-		public virtual bool Spa { get; } = false;
-		public virtual bool LogUsage { get; } = true;
+		protected virtual bool OpenApi { get; } = true;
+		protected virtual bool WebApi { get; } = true;
+		protected virtual bool Spa { get; } = false;
+		protected virtual bool LogUsage { get; } = true;
 
 		/// <summary>
 		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
@@ -41,7 +41,7 @@ namespace Albatross.Hosting {
 			this.Configuration = configuration;
 			this.AuthenticationSettings = new AuthenticationSettings(configuration);
 			this.AuthenticationSettings.Validate();
-			Log.Logger.Information("AspNetCore Startup configuration with authentication={secured}, spa={spa}, swagger={swagger}, webapi={webapi}, usage={usage}", this.AuthenticationSettings.HasAny, Spa, Swagger, WebApi, LogUsage);
+			Log.Logger.Information("AspNetCore Startup configuration with authentication={secured}, spa={spa}, swagger={swagger}, webapi={webapi}, usage={usage}", this.AuthenticationSettings.HasAny, Spa, OpenApi, WebApi, LogUsage);
 		}
 
 		protected virtual void ConfigureCors(CorsPolicyBuilder builder) {
@@ -88,13 +88,13 @@ namespace Albatross.Hosting {
 			return services;
 		}
 
-		public virtual void UseOpenApi(IApplicationBuilder app) {
+		protected virtual void UseOpenApi(IApplicationBuilder app) {
 			app.UseEndpoints(endpoints => {
 				endpoints.MapOpenApi("/openapi/v1.json");
 			});
 			app.UseSwaggerUI(config => {
 				var program = app.ApplicationServices.GetRequiredService<ProgramSetting>();
-				config.SwaggerEndpoint("/openapi/v1.json", program.App);
+				config.SwaggerEndpoint("http://localhost:15000/openapi/v1.json", program.App);
 				config.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object> {
 					["activated"] = false
 				};
@@ -104,7 +104,7 @@ namespace Albatross.Hosting {
 		#endregion
 
 		#region authentication and authorization
-		public virtual IServiceCollection AddAccessControl(IServiceCollection services) {
+		protected virtual IServiceCollection AddAccessControl(IServiceCollection services) {
 			if (this.AuthenticationSettings.UseKerberos || this.AuthenticationSettings.BearerTokens.Any()) {
 				var builder = services.AddAuthentication(option => {
 					if (!string.IsNullOrEmpty(AuthenticationSettings.Default)) {
@@ -144,7 +144,7 @@ namespace Albatross.Hosting {
 				}).AddJsonOptions(ConfigureJsonOption);
 				services.AddCors(opt => opt.AddDefaultPolicy(ConfigureCors));
 				services.AddAspNetCorePrincipalProvider();
-				if (Swagger) {
+				if (OpenApi) {
 					AddOpenApi(services);
 				}
 			}
@@ -162,7 +162,7 @@ namespace Albatross.Hosting {
 				if (this.LogUsage) { app.UseMiddleware<HttpRequestLoggingMiddleware>(); }
 				app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 			}
-			if (WebApi && Swagger) { UseOpenApi(app); }
+			if (WebApi && OpenApi) { UseOpenApi(app); }
 			if (Spa) { UseSpa(app, logger); }
 		}
 
