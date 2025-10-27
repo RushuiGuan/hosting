@@ -94,7 +94,7 @@ namespace Albatross.Hosting {
 			});
 			app.UseSwaggerUI(config => {
 				var program = app.ApplicationServices.GetRequiredService<ProgramSetting>();
-				config.SwaggerEndpoint("http://localhost:15000/openapi/v1.json", program.App);
+				config.SwaggerEndpoint("/openapi/v1.json", program.App);
 				config.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object> {
 					["activated"] = false
 				};
