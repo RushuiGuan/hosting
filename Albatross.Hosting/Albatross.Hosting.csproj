@@ -17,7 +17,7 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.10" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.10" />
-		<PackageReference Include="Albatross.Config" Version="9.0.1" />
+		<PackageReference Include="Albatross.Config" Version="9.0.2" />
 		<PackageReference Include="Albatross.Logging" Version="9.0.0" />
 		<PackageReference Include="Albatross.Serialization.Json" Version="9.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10" />
