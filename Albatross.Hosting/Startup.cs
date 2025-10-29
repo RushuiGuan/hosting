@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -133,6 +134,19 @@ namespace Albatross.Hosting {
 
 		public virtual void ConfigureJsonOption(JsonOptions options) { }
 
+		public virtual string[] CompressionMimeTypes => [
+			"application/json",
+			"application/xml",
+			"text/plain",
+			"text/html",
+			"text/css",
+			"text/csv",
+			"text/javascript",
+			"application/javascript",
+			"application/x-javascript",
+			"image/svg+xml"
+		];
+
 		public virtual void ConfigureServices(IServiceCollection services) {
 			services.TryAddSingleton(provider => provider.GetRequiredService<ILoggerFactory>().CreateLogger("default"));
 			services.TryAddSingleton(provider => new UsageWriter(provider.GetRequiredService<ILoggerFactory>().CreateLogger("usage")));
@@ -150,9 +164,30 @@ namespace Albatross.Hosting {
 			}
 			if (Spa) { AddSpa(services); }
 			if (this.AuthenticationSettings.HasAny) { AddAccessControl(services); }
+			// add compression
+			if (this.CompressionMimeTypes.Any()) {
+				services.AddResponseCompression(
+					options => {
+						options.EnableForHttps = true;
+						options.MimeTypes = CompressionMimeTypes;
+						options.Providers.Add<GzipCompressionProvider>();
+						options.Providers.Add<BrotliCompressionProvider>();
+					});
+				services.Configure<GzipCompressionProviderOptions>(
+					options => {
+						options.Level = System.IO.Compression.CompressionLevel.Optimal;
+					});
+				services.Configure<BrotliCompressionProviderOptions>(
+					options => {
+						options.Level = System.IO.Compression.CompressionLevel.Fastest;
+					});
+			}
 		}
 
 		public virtual void Configure(IApplicationBuilder app, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<Startup> logger) {
+			if(this.CompressionMimeTypes.Any()) {
+				app.UseResponseCompression();
+			}
 			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting, environmentSetting.Value);
 			app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandler = GlobalExceptionHandler.Handle });
 			app.UseRouting();

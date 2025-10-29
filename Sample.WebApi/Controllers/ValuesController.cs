@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Writers;
 using System;
 
 namespace Sample.WebApi.Controllers {
@@ -38,6 +39,22 @@ namespace Sample.WebApi.Controllers {
 		public string Get(int? id1, int? ID2, int id3) {
 			logger.LogInformation("{id1}, {id2}, {id3}", id1, ID2, id3);
 			return $"{id1}.{ID2}.{id3}";
+		}
+
+		[HttpPost("text-input-output")]
+		public string TextInputAndOutput([FromBody] string input) {
+			logger.LogInformation("input: {input}", input);
+			return input;
+		}
+
+		[HttpPost("mixed-input")]
+		public string MixedInput([FromForm][FromBody] string input) {
+			return input;
+		}
+
+		[HttpGet("comporession-test")]
+		public string CompressionTest(int count) {
+			return new string('A', count);
 		}
 	}
 }

@@ -22,6 +22,7 @@
 		<PackageReference Include="Albatross.Serialization.Json" Version="9.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+		<PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.3.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="..\icon.png">
