@@ -1,8 +1,6 @@
 ﻿using Albatross.Authentication.AspNetCore;
 using Albatross.Config;
 using Albatross.Hosting.ExceptionHandling;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
@@ -12,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -61,7 +59,7 @@ namespace Albatross.Hosting {
 				if (this.AuthenticationSettings.BearerTokens.Any()) {
 					options.AddDocumentTransformer((doc, context, cancellationToken) => {
 						doc.Components = doc.Components ?? new OpenApiComponents();
-						doc.Components.SecuritySchemes ??= new Dictionary<string, OpenApiSecurityScheme>();
+						doc.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
 						doc.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme {
 							Name = "Authorization",
 							Type = SecuritySchemeType.Http,
@@ -70,16 +68,11 @@ namespace Albatross.Hosting {
 							In = ParameterLocation.Header,
 							Description = "Enter your JWT token. Do not prefix the token with 'Bearer: '"
 						};
-						doc.SecurityRequirements ??= new List<OpenApiSecurityRequirement>();
-						doc.SecurityRequirements.Add(new OpenApiSecurityRequirement {
-							{ 
-								new OpenApiSecurityScheme {
-									Reference = new OpenApiReference { 
-										Type = ReferenceType.SecurityScheme, 
-										Id = "Bearer"
-									}
-								},
-								new string[] { }
+						doc.Security ??= new List<OpenApiSecurityRequirement>();
+						doc.Security.Add(new OpenApiSecurityRequirement {
+							{
+								new OpenApiSecuritySchemeReference("Bearer", doc, null),
+								new List<string>()
 							}
 						});
 						return Task.CompletedTask;
@@ -185,7 +178,7 @@ namespace Albatross.Hosting {
 		}
 
 		public virtual void Configure(IApplicationBuilder app, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<Startup> logger) {
-			if(this.CompressionMimeTypes.Any()) {
+			if (this.CompressionMimeTypes.Any()) {
 				app.UseResponseCompression();
 			}
 			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting, environmentSetting.Value);
