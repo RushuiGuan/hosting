@@ -1,16 +1,16 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <PropertyGroup>
-    <Version>9.0.5</Version>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <ProduceReferenceAssembly>True</ProduceReferenceAssembly>
-    <LangVersion>Latest</LangVersion>
-    <Nullable>enable</Nullable>
-    <RepositoryUrl>https://github.com/RushuiGuan/hosting</RepositoryUrl>
-    <RepositoryProjectRoot>$(RepositoryUrl)/tree/main</RepositoryProjectRoot>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>icon.png</PackageIcon>
-    <Authors>Rushui Guan</Authors>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Version>9.0.6</Version>
+		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+		<ProduceReferenceAssembly>True</ProduceReferenceAssembly>
+		<LangVersion>Latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<RepositoryUrl>https://github.com/RushuiGuan/hosting</RepositoryUrl>
+		<RepositoryProjectRoot>$(RepositoryUrl)/tree/main</RepositoryProjectRoot>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
+		<Authors>Rushui Guan</Authors>
+	</PropertyGroup>
 </Project>
