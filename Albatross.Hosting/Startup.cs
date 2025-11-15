@@ -84,11 +84,11 @@ namespace Albatross.Hosting {
 
 		protected virtual void UseOpenApi(IApplicationBuilder app) {
 			app.UseEndpoints(endpoints => {
-				endpoints.MapOpenApi("openapi/v1.json");
+				endpoints.MapOpenApi("/swagger/v1.json");
 			});
 			app.UseSwaggerUI(config => {
 				var program = app.ApplicationServices.GetRequiredService<ProgramSetting>();
-				config.SwaggerEndpoint("openapi/v1.json", program.App);
+				config.SwaggerEndpoint("v1.json", program.App);
 				config.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object> {
 					["activated"] = false
 				};
