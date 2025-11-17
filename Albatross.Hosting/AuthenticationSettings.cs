@@ -18,19 +18,17 @@ namespace Albatross.Hosting {
 			}
 		}
 
-		public string? DefaultAuthenticationScheme {
-			get {
-				if (!string.IsNullOrEmpty(Default)) {
-					return Default;
-				} else if (UseKerberos) {
-					if (BearerTokens.Length == 0) {
-						return NegotiateDefaults.AuthenticationScheme;
-					}
-				} else if (BearerTokens.Length == 1) {
-					return BearerTokens[0].Provider;
+		public string? GetDefault() {
+			if (!string.IsNullOrEmpty(Default)) {
+				return Default;
+			} else if (UseKerberos) {
+				if (BearerTokens.Length == 0) {
+					return NegotiateDefaults.AuthenticationScheme;
 				}
-				return null;
+			} else if (BearerTokens.Length == 1) {
+				return BearerTokens[0].Provider;
 			}
+			return null;
 		}
 	}
 }

@@ -101,9 +101,7 @@ namespace Albatross.Hosting {
 		protected virtual IServiceCollection AddAccessControl(IServiceCollection services) {
 			if (this.AuthenticationSettings.UseKerberos || this.AuthenticationSettings.BearerTokens.Any()) {
 				var builder = services.AddAuthentication(option => {
-					if (!string.IsNullOrEmpty(AuthenticationSettings.Default)) {
-						option.DefaultScheme = this.AuthenticationSettings.Default;
-					}
+					option.DefaultScheme = this.AuthenticationSettings.GetDefault();
 				});
 				foreach (var token in this.AuthenticationSettings.BearerTokens) {
 					builder.AddJwtBearer(token.Provider, token.SetJwtBearerOptions);
