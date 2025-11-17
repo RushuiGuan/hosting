@@ -72,10 +72,10 @@ namespace Albatross.Hosting {
 						};
 						doc.SecurityRequirements ??= new List<OpenApiSecurityRequirement>();
 						doc.SecurityRequirements.Add(new OpenApiSecurityRequirement {
-							{ 
+							{
 								new OpenApiSecurityScheme {
-									Reference = new OpenApiReference { 
-										Type = ReferenceType.SecurityScheme, 
+									Reference = new OpenApiReference {
+										Type = ReferenceType.SecurityScheme,
 										Id = "Bearer"
 									}
 								},
@@ -108,9 +108,8 @@ namespace Albatross.Hosting {
 		protected virtual IServiceCollection AddAccessControl(IServiceCollection services) {
 			if (this.AuthenticationSettings.UseKerberos || this.AuthenticationSettings.BearerTokens.Any()) {
 				var builder = services.AddAuthentication(option => {
-					if (!string.IsNullOrEmpty(AuthenticationSettings.Default)) {
-						option.DefaultScheme = this.AuthenticationSettings.Default;
-					}
+					var defaultScheme = this.AuthenticationSettings.DefaultAuthenticationScheme;
+					option.DefaultScheme = defaultScheme;
 				});
 				foreach (var token in this.AuthenticationSettings.BearerTokens) {
 					builder.AddJwtBearer(token.Provider, token.SetJwtBearerOptions);
@@ -185,7 +184,7 @@ namespace Albatross.Hosting {
 		}
 
 		public virtual void Configure(IApplicationBuilder app, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<Startup> logger) {
-			if(this.CompressionMimeTypes.Any()) {
+			if (this.CompressionMimeTypes.Any()) {
 				app.UseResponseCompression();
 			}
 			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting, environmentSetting.Value);

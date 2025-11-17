@@ -6,8 +6,8 @@ using System.Linq;
 
 namespace Sample.WebApi.Controllers {
 	[Route("api/login-windows")]
-	[ApiController]
 	[Authorize(AuthenticationSchemes = NegotiateDefaults.AuthenticationScheme)]
+	[ApiController]
 	public class LoginByWindowsController : ControllerBase {
 		private readonly IGetCurrentLogin getCurrentLogin;
 		private readonly IGetCurrentUser getCurrentUser;
