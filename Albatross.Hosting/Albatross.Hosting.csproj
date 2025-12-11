@@ -10,17 +10,17 @@
 		<PackageProjectUrl>$(RepositoryProjectRoot)/Albatross.Hosting</PackageProjectUrl>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="10.0.0-50.main" />
-		<PackageReference Include="Albatross.Config" Version="10.0.0-16.main" />
-		<PackageReference Include="Albatross.Logging" Version="10.0.0-11.main" />
-		<PackageReference Include="Albatross.Serialization.Json" Version="10.0.0-20.main" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.0" />
+		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="8.1.0" />
+		<PackageReference Include="Albatross.Config" Version="7.5.11" />
+		<PackageReference Include="Albatross.Logging" Version="10.0.1" />
+		<PackageReference Include="Albatross.Serialization.Json" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="..\icon.png">
