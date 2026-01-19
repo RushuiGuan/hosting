@@ -1,30 +1,346 @@
 # Custom Error Response
-## Intent
-Allow controller endpoints to create an error response by throwing an unhandled exception.
 
-## Reason
-Aspnetcore expects controller endpoints to handle exceptions and create proper error response.  This can be done using the return type of `IActionResult`.  While this approach is preferred, small to medium enterprises often create error response by throwing unhandled exceptions.  Especially when the api is consumed by internal applications and the error response is not highly customized.  Aspnetcore can do this out of box but with limited capability.  `Albatross.Hosting` brings back the deprecated `HttpResponseException` as `HttpApiException` so that end point can throw an exception with specific status code and json content.  It also allows easy configuration of error response based on application exception types.
+Albatross.Hosting provides a global exception handling system that converts unhandled exceptions into consistent HTTP error responses. This allows controller endpoints to signal errors by throwing exceptions instead of manually constructing error responses.
 
-Please note that this is a quick way of creating an error response that is `good enough` for the consumer.  If a system needs proper error responses for all its endpoints, using `IActionResult` return type is the preferred method because it creates clear intent and the error content code directly at the source.  Doing it using a global error handler by introducing specific application level exceptions would be considered as an *antipattern*.
+## Features
 
-## How it works
+- **Global Exception Handling** - Automatically converts unhandled exceptions to HTTP responses
+- **HttpApiException** - Throw exceptions with specific status codes and custom error content
+- **ProblemDetails Support** - Returns RFC 7807 compliant error responses by default
+- **ArgumentException Handling** - Automatically returns 400 Bad Request for argument validation errors
+- **Customizable** - Override the default handler to implement custom error response logic
+- **Logging Control** - Option to suppress logging for expected exceptions like ArgumentException
 
-By default `IApplicationBuilder.UseExceptionHandler` method is invoked.  By doing that, unhandled exceptions will be handled by `Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware`.  The middleware allows a custom exception handler which is supplied by `Albatross.Hosting.ExceptionHandling.DefaultGlobalExceptionHandler`.  The default handler can be changed by overwriting the `Startup.GlobalExceptionHandler` property.
+## How It Works
 
-## Different Ways of Sending Error Responses
-1. Send an `ActionResult`
-	
-	The exception handler doesnot change the this behavior because there is no unhandled exceptions.
+Albatross.Hosting uses ASP.NET Core's `IApplicationBuilder.UseExceptionHandler` middleware. When an unhandled exception occurs:
 
-1. Throw an Exception of type `Albatross.Hosting.ExceptionHandling.HttpApiException`
-	
-	The exception handler will return an error response with the status code specified by the instance of `HttpApiException`.  It would return the content of the `HttpApiException.Error` object as text if it is a string.  Otherwise it would return its serialized json value.
+1. The `ExceptionHandlerMiddleware` catches the exception
+2. The configured `IGlobalExceptionHandler` converts the exception to an `HttpApiException`
+3. The response status code and body are set based on the exception details
+4. The response is returned to the client
 
-1. Throw an Exception of other types
+## Default Error Response Format
 
-	* If the exception is of type `ArgumentException`, the default handler will return a 400 error.  Otherwise, the status code would be 500.
-	* The content of the response would be a json object of type `Albatross.Hosting.ExceptionHandling.ErrorMessage`.  `ErrorMessage` class is similar to the `Microsoft.AspNetCore.Mvc.ProblemDetails` class.  It is used as default to support the legacy code base.  If the `ProblemDetails` type desired, overwrite the `Startup.GlobalExceptionHandler` property to use `Albatross.Hosting.ExceptionHandling.ProblemDetailsGlobalExceptionHandler`
-	* Create your own custom global exception handler to create custom error responses based on application exception.  
+The default handler returns errors using the `ProblemDetailsWithTraceId` format:
 
-1. By default, aspnetcore will log an error for any unhandled exceptions.  On an critical system, all errors could be notified and it might be desirable to filter out the `ArgumentException` error if it is used as indicator of invalid request.  This can be done automatically by setting the `Setup.SupressUnhandledArgumentExceptionLogging` flag to true.
+```json
+{
+    "status": 500,
+    "title": "An error occurred while processing your request",
+    "detail": "The exception message",
+    "type": "System.InvalidOperationException",
+    "traceId": "00-abc123..."
+}
+```
 
+| Property | Description |
+|----------|-------------|
+| `status` | HTTP status code |
+| `title` | Generic error title |
+| `detail` | The exception message |
+| `type` | The exception type's full name |
+| `traceId` | Request trace identifier for debugging |
+
+## Returning Error Responses
+
+### Method 1: Return ActionResult (Recommended)
+
+For explicit error responses, return an `ActionResult`:
+
+```csharp
+[HttpGet("{id}")]
+public ActionResult<Item> GetItem(int id) {
+    var item = _repository.Find(id);
+    if (item == null) {
+        return NotFound(new { message = $"Item {id} not found" });
+    }
+    return item;
+}
+
+[HttpPost]
+public ActionResult CreateItem([FromBody] Item item) {
+    if (!ModelState.IsValid) {
+        return BadRequest(ModelState);
+    }
+    // Or use the Problem method for ProblemDetails format
+    return Problem(
+        detail: "Validation failed",
+        statusCode: 400,
+        title: "Bad Request"
+    );
+}
+```
+
+This approach is preferred because it creates clear intent and documents the error response directly at the source.
+
+### Method 2: Throw HttpApiException
+
+Throw `HttpApiException` to return a specific status code with custom content:
+
+```csharp
+using Albatross.Hosting.ExceptionHandling;
+
+[HttpGet("{id}")]
+public Item GetItem(int id) {
+    var item = _repository.Find(id);
+    if (item == null) {
+        // Return plain text error
+        throw new HttpApiException(404, $"Item {id} not found");
+    }
+    return item;
+}
+
+[HttpPost]
+public void CreateItem([FromBody] Item item) {
+    if (_repository.Exists(item.Id)) {
+        // Return JSON error object
+        throw new HttpApiException(409, new {
+            code = "DUPLICATE_ITEM",
+            message = $"Item {item.Id} already exists",
+            itemId = item.Id
+        });
+    }
+    _repository.Add(item);
+}
+```
+
+#### HttpApiException Constructors
+
+```csharp
+// Status code with error object (string or object)
+new HttpApiException(int statusCode, object? error)
+
+// Status code with title and error object
+new HttpApiException(int statusCode, string title, object? error)
+```
+
+#### Response Content Type
+
+- If `error` is a `string`, the response content type is `text/plain`
+- If `error` is an object, it's serialized as JSON with content type `application/json`
+
+### Method 3: Throw Standard Exceptions
+
+Throw standard .NET exceptions for automatic conversion:
+
+```csharp
+[HttpGet("{id}")]
+public Item GetItem(int id) {
+    if (id <= 0) {
+        // Returns 400 Bad Request
+        throw new ArgumentException("Id must be positive", nameof(id));
+    }
+
+    var item = _repository.Find(id);
+    if (item == null) {
+        // Returns 500 Internal Server Error
+        throw new InvalidOperationException($"Item {id} not found");
+    }
+    return item;
+}
+```
+
+#### Default Status Code Mapping
+
+| Exception Type | Status Code |
+|----------------|-------------|
+| `ArgumentException` (and derived types) | 400 Bad Request |
+| All other exceptions | 500 Internal Server Error |
+
+## Custom Exception Handlers
+
+### Creating a Custom Handler
+
+Create a custom handler by implementing `IGlobalExceptionHandler` or extending `DefaultGlobalExceptionHandler`:
+
+```csharp
+using Albatross.Hosting.ExceptionHandling;
+using Microsoft.AspNetCore.Http;
+
+public class CustomExceptionHandler : DefaultGlobalExceptionHandler {
+    public override HttpApiException Convert(HttpContext context, Exception exception) {
+        // Handle specific exception types
+        if (exception is NotFoundException notFound) {
+            return new HttpApiException(404, new {
+                error = "NOT_FOUND",
+                message = notFound.Message,
+                resourceType = notFound.ResourceType,
+                resourceId = notFound.ResourceId
+            });
+        }
+
+        if (exception is ValidationException validation) {
+            return new HttpApiException(400, new {
+                error = "VALIDATION_ERROR",
+                message = validation.Message,
+                errors = validation.Errors
+            });
+        }
+
+        if (exception is UnauthorizedException) {
+            return new HttpApiException(401, "Unauthorized");
+        }
+
+        // Fall back to default handling
+        return base.Convert(context, exception);
+    }
+}
+```
+
+### Registering the Custom Handler
+
+Override the `GlobalExceptionHandler` property in your Startup class:
+
+```csharp
+public class MyStartup : Albatross.Hosting.Startup {
+    public MyStartup(IConfiguration configuration) : base(configuration) { }
+
+    protected override IGlobalExceptionHandler GlobalExceptionHandler { get; }
+        = new CustomExceptionHandler();
+}
+```
+
+### Customizing the Error Object
+
+Override `ConvertToObject` to change the error response structure:
+
+```csharp
+public class ApiErrorHandler : DefaultGlobalExceptionHandler {
+    public override object ConvertToObject(HttpContext context, int statusCode, Exception exception) {
+        return new {
+            success = false,
+            error = new {
+                code = exception.GetType().Name,
+                message = exception.Message,
+                timestamp = DateTime.UtcNow,
+                requestId = context.TraceIdentifier
+            }
+        };
+    }
+}
+```
+
+## Legacy Error Format
+
+For backward compatibility with legacy systems, use `LegacyGlobalExceptionHandler` which returns the `ErrorMessage` format:
+
+```csharp
+protected override IGlobalExceptionHandler GlobalExceptionHandler { get; }
+    = new LegacyGlobalExceptionHandler();
+```
+
+**Legacy ErrorMessage format:**
+```json
+{
+    "statusCode": 500,
+    "type": "System.InvalidOperationException",
+    "message": "The exception message",
+    "innerError": {
+        "statusCode": 500,
+        "type": "System.Exception",
+        "message": "Inner exception message",
+        "innerError": null
+    }
+}
+```
+
+> **Note**: `LegacyGlobalExceptionHandler` and `ErrorMessage` are marked as obsolete. Use the default `ProblemDetails` format for new applications.
+
+## Suppressing ArgumentException Logging
+
+By default, ASP.NET Core logs all unhandled exceptions as errors. For public-facing APIs where `ArgumentException` indicates invalid client input rather than a server error, you can suppress this logging:
+
+```csharp
+public class Program {
+    public static Task Main(string[] args) {
+        return new Setup(args, supressUnhandledArgumentExceptionLogging: true)
+            .ConfigureWebHost<MyStartup>()
+            .RunAsync();
+    }
+}
+```
+
+This prevents `ArgumentException` from being logged as errors, reducing noise in your logs while still returning appropriate 400 responses to clients.
+
+## Best Practices
+
+### When to Use Each Approach
+
+| Scenario | Recommended Approach |
+|----------|---------------------|
+| Known error conditions | Return `ActionResult` |
+| Validation errors | Return `BadRequest()` or throw `ArgumentException` |
+| Not found errors | Return `NotFound()` or throw `HttpApiException(404, ...)` |
+| Custom status codes | Throw `HttpApiException` |
+| Unexpected errors | Let exceptions propagate (default 500 response) |
+
+### Avoid Anti-Patterns
+
+1. **Don't create exception types for every error case** - Use `HttpApiException` for ad-hoc errors
+2. **Don't use exceptions for flow control** - Exceptions should be exceptional
+3. **Don't expose sensitive information** - Be careful what you include in error messages
+
+### Error Response Guidelines
+
+```csharp
+// Good: Clear, actionable error message
+throw new HttpApiException(400, new {
+    code = "INVALID_DATE_RANGE",
+    message = "End date must be after start date",
+    field = "endDate"
+});
+
+// Bad: Vague error message
+throw new HttpApiException(400, "Invalid input");
+
+// Bad: Exposing internal details
+throw new HttpApiException(500, new {
+    stackTrace = exception.StackTrace,
+    connectionString = _config.ConnectionString
+});
+```
+
+## Sample Code
+
+See the [ExceptionTestCaseController](https://github.com/RushuiGuan/hosting/blob/main/Sample.WebApi/Controllers/ExceptionTestCaseController.cs) in the Sample.WebApi project for working examples:
+
+```csharp
+// Return ProblemDetails using ControllerBase.Problem()
+[HttpGet("problem")]
+public ActionResult UseProblem() {
+    return Problem(
+        detail: "error detail",
+        title: "test",
+        statusCode: 500,
+        type: "ExceptionType"
+    );
+}
+
+// Throw generic exception (returns 500 with ProblemDetails)
+[HttpGet("exception")]
+public void ThrowException() {
+    throw new Exception("This is a test exception");
+}
+
+// Throw HttpApiException with text content
+[HttpGet("text-error")]
+public void ThrowTextError() {
+    throw new HttpApiException(400, "This is a test exception");
+}
+
+// Throw HttpApiException with JSON content
+[HttpGet("json-error")]
+public void ThrowJsonError() {
+    throw new HttpApiException(400, new {
+        id = 100,
+        message = "This is a test exception"
+    });
+}
+
+// Throw ArgumentException (returns 400)
+[HttpGet("argument-error")]
+public void ThrowArgumentError() {
+    throw new ArgumentException("Invalid parameter value");
+}
+```

@@ -46,7 +46,7 @@
 		],
 		"globalMetadata": {
 			"_appName": "Albatross.Hosting",
-			"_appTitle": "Hosting",
+			"_appTitle": "Build production-ready .NET web APIs and services with minimal configuration",
 			"_appLogoPath": "./images/logo.svg",
 			"_appFaviconPath": "./images/favicon.svg",
 			"_enableSearch": true,
