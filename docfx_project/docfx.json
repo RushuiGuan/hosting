@@ -1,0 +1,62 @@
+{
+	"$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+	"metadata": [
+		{
+			"src": [
+				{
+					"src": "..",
+					"files": [
+						"Albatross.Hosting/Albatross.Hosting.csproj"
+					]
+				}
+			],
+			"output": "api"
+		}
+	],
+	"build": {
+		"sitemap": {
+			"baseUrl": "https://rushuiguan.github.io/hosting",
+			"priority": 0.5,
+			"changefreq": "weekly"
+		},
+		"content": [
+			{
+				"files": [
+					"**/*.{md,yml}"
+				],
+				"exclude": [
+					"_site/**"
+				]
+			}
+		],
+		"resource": [
+			{
+				"files": [
+					"images/**",
+					"*.html",
+					"robots.txt",
+					".nojekyll"
+				]
+			}
+		],
+		"output": "_site",
+		"template": [
+			"default",
+			"modern"
+		],
+		"globalMetadata": {
+			"_appName": "Albatross.Hosting",
+			"_appTitle": "Hosting",
+			"_appLogoPath": "./images/logo.svg",
+			"_appFaviconPath": "./images/favicon.svg",
+			"_enableSearch": true,
+			"pdf": false,
+			"_gitContribute": {
+				"repo": "https://github.com/rushuiguan/hosting",
+				"branch": "main",
+				"path": "docfx_project"
+			},
+			"_gitUrlPattern": "github"
+		}
+	}
+}
