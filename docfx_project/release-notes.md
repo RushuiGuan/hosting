@@ -1,5 +1,26 @@
 # Release Notes
 
+## hosting-10.0.1 (2026-01-20)
+
+### Documentation
+
+- **Added comprehensive documentation** - Migrated and expanded documentation to DocFX format:
+  - Authentication guide covering Kerberos and JWT Bearer token configuration
+  - Custom error response handling guide
+  - Plain text input formatter usage
+  - Service/daemon application development guide
+  - SPA hosting configuration guide
+  - Web API application development guide
+  - Request logging documentation
+
+- **Enhanced README** - Expanded the `Albatross.Hosting` README with more detailed usage examples and configuration options
+
+### Infrastructure
+
+- **Added GitHub Actions workflow** - Added GitHub Pages workflow for automated documentation publishing
+
+---
+
 ## hosting-10.0.0 (2025-12-10)
 
 ### Breaking Changes
