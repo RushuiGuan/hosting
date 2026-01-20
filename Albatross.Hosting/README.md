@@ -78,12 +78,13 @@ public class MyHostedService : IHostedService {
 
 ## 📖 Documentation
 
-**📚 [GitHub Repository](https://github.com/RushuiGuan/hosting)**
+**📚 [Complete Documentation](https://rushuiguan.github.io/hosting/)**
 
 ### Links
-- **[Web API Application Guide](https://github.com/RushuiGuan/hosting/blob/main/docs/webapi-app.md)**
-- **[Service Application Guide](https://github.com/RushuiGuan/hosting/blob/main/docs/service-app.md)**
-- **[SPA Hosting](https://github.com/RushuiGuan/hosting/blob/main/docs/spa-hosting.md)**
-- **[Custom Error Response](https://github.com/RushuiGuan/hosting/blob/main/docs/custom-error-response.md)**
-- **[Request Logging](https://github.com/RushuiGuan/hosting/blob/main/docs/request-logging.md)**
-- **[Plain Text Input Formatter](https://github.com/RushuiGuan/hosting/blob/main/docs/plain-text-input-formatter.md)**
+- **[Web API Application Guide](https://rushuiguan.github.io/hosting/articles/webapi-app.html)**
+- **[Service Application Guide](https://rushuiguan.github.io/hosting/articles/service-app.html)**
+- **[Authentication](https://rushuiguan.github.io/hosting/articles/authentication.html)**
+- **[SPA Hosting](https://rushuiguan.github.io/hosting/articles/spa-hosting.html)**
+- **[Custom Error Response](https://rushuiguan.github.io/hosting/articles/custom-error-response.html)**
+- **[Request Logging](https://rushuiguan.github.io/hosting/articles/request-logging.html)**
+- **[Plain Text Input Formatter](https://rushuiguan.github.io/hosting/articles/plain-text-input-formatter.html)**
