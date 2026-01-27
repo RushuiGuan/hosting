@@ -17,7 +17,7 @@ namespace Albatross.Hosting {
 		}
 
 		public override async Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context, Encoding encoding) {
-			string data = null;
+			string? data = null;
 			using (var streamReader = context.ReaderFactory(context.HttpContext.Request.Body, encoding)) {
 				data = await streamReader.ReadToEndAsync();
 			}

@@ -1,9 +1,10 @@
-﻿using Albatross.Hosting.ExceptionHandling;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sample.WebApi.Controllers {
@@ -28,16 +29,6 @@ namespace Sample.WebApi.Controllers {
 			throw new Exception("This is a test exception");
 		}
 
-		[HttpGet("send-by-throwing-text-http-api-exception")]
-		public void ThrowTextHttpApiException() {
-			throw new HttpApiException(400, "This is a test exception");
-		}
-
-		[HttpGet("send-by-throwing-json-http-api-exception")]
-		public void ThrowJsonHttpApiException() {
-			throw new HttpApiException(400, new { id = 100, message = "This is a test exception" });
-		}
-
 		[HttpGet("send-by-throwing-argument-exception")]
 		public void ThrowArgumentException() {
 			throw new ArgumentException("This is a test exception");
@@ -49,17 +40,19 @@ namespace Sample.WebApi.Controllers {
 		}
 
 		[HttpGet("throw-after-async-enumerable")]
-		public async IAsyncEnumerable<int> ThrowAfterAsyncEnumerable() {
+		public async IAsyncEnumerable<int> ThrowAfterAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken) {
 			await Task.Delay(1);
 			for (int i = 0; i < 100; i++) {
+				await Task.Delay(10, cancellationToken);
 				yield return i;
 			}
 			throw new ArgumentException("this is a test exception");
 		}
 
 		[HttpGet("throw-after-yield-return")]
-		public IEnumerable<int> ThrowAfterYieldReturn() {
+		public IEnumerable<int> ThrowAfterYieldReturn(CancellationToken cancellationToken) {
 			for (int i = 0; i < 100; i++) {
+				cancellationToken.ThrowIfCancellationRequested();
 				yield return i;
 			}
 			throw new ArgumentException("this is a test exception");

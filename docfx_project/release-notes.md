@@ -1,5 +1,15 @@
 # Release Notes
 
+## hosting-10.1.0 (2026-01-27)
+
+### Breaking Changes
+
+- **Simplified global exception handling** - Removed the `IGlobalExceptionHandler` interface, `HttpApiException`, `ErrorMessage`, `ProblemDetailsWithTraceId`, `LegacyGobalExceptionHandler`, and `ExceptionHandlerSerializationOptions` classes. The global exception handler is now a sealed `GlobalExceptionHandler` class that serves as a fallback for unhandled exceptions. Errors should be handled explicitly using `ActionResult` in controller actions.
+
+- **Removed `GlobalExceptionHandler` property from `Startup`** - The virtual `GlobalExceptionHandler` property has been removed. The handler is no longer customizable via override.
+
+---
+
 ## hosting-10.0.1 (2026-01-20)
 
 ### Documentation

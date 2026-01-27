@@ -180,7 +180,7 @@ namespace Albatross.Hosting {
 				app.UseResponseCompression();
 			}
 			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting, environmentSetting.Value);
-			app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandler = GlobalExceptionHandler.Handle });
+			app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandler = new GlobalExceptionHandler().Handle });
 			app.UseRouting();
 			if (WebApi) {
 				app.UseCors();
@@ -202,10 +202,5 @@ namespace Albatross.Hosting {
 			app.Map(config.RequestPath ?? string.Empty, web => web.UseSpa(spa => { }));
 			app.ApplicationServices.GetRequiredService<ITransformAngularConfig>().Transform();
 		}
-
-		/// <summary>
-		/// for legacy systems, override this method to use <see cref="LegacyGobalExceptionHandler"/>
-		/// </summary>
-		protected virtual IGlobalExceptionHandler GlobalExceptionHandler { get; } = new DefaultGlobalExceptionHandler();
 	}
 }
