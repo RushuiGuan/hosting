@@ -28,7 +28,6 @@ namespace Albatross.Hosting {
 		protected virtual bool OpenApi { get; } = true;
 		protected virtual bool WebApi { get; } = true;
 		protected virtual bool Spa { get; } = false;
-		protected virtual bool LogUsage { get; } = true;
 
 		/// <summary>
 		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
@@ -40,7 +39,7 @@ namespace Albatross.Hosting {
 			this.Configuration = configuration;
 			this.AuthenticationSettings = new AuthenticationSettings(configuration);
 			this.AuthenticationSettings.Validate();
-			Log.Logger.Information("AspNetCore Startup configuration with authentication={secured}, spa={spa}, swagger={swagger}, webapi={webapi}, usage={usage}", this.AuthenticationSettings.HasAny, Spa, OpenApi, WebApi, LogUsage);
+			Log.Logger.Information("AspNetCore Startup configuration with authentication={secured}, spa={spa}, swagger={swagger}, webapi={webapi}", this.AuthenticationSettings.HasAny, Spa, OpenApi, WebApi);
 		}
 
 		protected virtual void ConfigureCors(CorsPolicyBuilder builder) {
@@ -140,7 +139,7 @@ namespace Albatross.Hosting {
 
 		public virtual void ConfigureServices(IServiceCollection services) {
 			services.TryAddSingleton(provider => provider.GetRequiredService<ILoggerFactory>().CreateLogger("default"));
-			services.TryAddSingleton(provider => new UsageWriter(provider.GetRequiredService<ILoggerFactory>().CreateLogger("usage")));
+			services.AddHttpContextAccessor();
 			if (WebApi) {
 				services.AddControllers(options => {
 					if (this.PlainTextFormatter) {
@@ -185,7 +184,6 @@ namespace Albatross.Hosting {
 			if (WebApi) {
 				app.UseCors();
 				if (this.AuthenticationSettings.HasAny) { app.UseAuthentication().UseAuthorization(); }
-				if (this.LogUsage) { app.UseMiddleware<HttpRequestLoggingMiddleware>(); }
 				app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 			}
 			if (WebApi && OpenApi) { UseOpenApi(app); }

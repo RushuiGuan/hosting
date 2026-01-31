@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(findstr:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nSimplify global exception handling and update documentation\n\nRemove customizable exception handler infrastructure \\(IGlobalExceptionHandler,\nHttpApiException, ErrorMessage, ProblemDetailsWithTraceId, LegacyGobalExceptionHandler\\)\nin favor of a sealed GlobalExceptionHandler fallback. Errors should be handled\nexplicitly via ActionResult. Update documentation to reflect the new approach\nand add release notes for 10.1.0.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nSimplify global exception handling and update documentation\n\nRemove customizable exception handler infrastructure \\(IGlobalExceptionHandler,\nHttpApiException, ErrorMessage, ProblemDetailsWithTraceId, LegacyGobalExceptionHandler\\)\nin favor of a sealed GlobalExceptionHandler fallback. Errors should be handled\nexplicitly via ActionResult. Update documentation to reflect the new approach\nand add release notes for 10.1.0.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(dotnet build:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)"
     ]
   }
 }
