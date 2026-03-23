@@ -1,5 +1,31 @@
 # Release Notes
 
+## hosting-10.2.0 (2026-03-23)
+
+### Breaking Changes
+
+- **`Setup` constructor signature changed** - The constructor parameter `bool supressUnhandledArgumentExceptionLogging` has been replaced with `string? environmentPrefix`. Callers must update their constructor call (e.g., `new Setup(args, null)` or pass a prefix string for environment variable filtering).
+
+- **Removed `SupressUnhandledArgumentExceptionLogging` and `ConfigureLogging()`** - The `SupressUnhandledArgumentExceptionLogging` property and the virtual `ConfigureLogging()` override point have been removed. Serilog filtering must now be configured directly via the `serilog.json` configuration file.
+
+- **`hostsettings.json` no longer loaded** - Host URL configuration via `hostsettings.json` is no longer part of the default configuration pipeline.
+
+- **Removed `LogUsage` and `HttpRequestLoggingMiddleware`** - The `LogUsage` property on `Startup`, the `HttpRequestLoggingMiddleware`, `UsageWriter`, and `UsageData` classes have all been removed. Request logging should now be implemented using Serilog's built-in middleware or custom enrichers.
+
+### Changes
+
+- **Added `ClientIPEnricher`** - A new Serilog `ILogEventEnricher` that automatically adds the client IP address as a `ClientIP` property to log events. It uses `IHttpContextAccessor` to retrieve the remote IP from the current HTTP context.
+
+- **`IHttpContextAccessor` registered by default** - `services.AddHttpContextAccessor()` is now called in `Startup.ConfigureServices()`, making `IHttpContextAccessor` available for injection without additional setup.
+
+- **Serilog configured from `serilog.json`** - Serilog is now configured by reading `serilog.json` (and `serilog.{environment}.json`) directly via `Configuration` in the `Setup` constructor, replacing the previous `SetupSerilog.UseConfigFile()` approach.
+
+- **`config-root` command line argument** - A new `config-root` command line/environment variable argument allows overriding the base directory from which configuration files are loaded. Defaults to `AppContext.BaseDirectory`.
+
+- **`RunAsync()` uses `await using`** - The bootstrap logger is now disposed asynchronously with `await using` for correct async teardown.
+
+---
+
 ## hosting-10.1.0 (2026-01-27)
 
 ### Breaking Changes
