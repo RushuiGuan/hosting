@@ -14,8 +14,6 @@
 
 ### Changes
 
-- **Added `ClientIPEnricher`** - A new Serilog `ILogEventEnricher` that automatically adds the client IP address as a `ClientIP` property to log events. It uses `IHttpContextAccessor` to retrieve the remote IP from the current HTTP context.
-
 - **`IHttpContextAccessor` registered by default** - `services.AddHttpContextAccessor()` is now called in `Startup.ConfigureServices()`, making `IHttpContextAccessor` available for injection without additional setup.
 
 - **Serilog configured from `serilog.json`** - Serilog is now configured by reading `serilog.json` (and `serilog.{environment}.json`) directly via `Configuration` in the `Setup` constructor, replacing the previous `SetupSerilog.UseConfigFile()` approach.
