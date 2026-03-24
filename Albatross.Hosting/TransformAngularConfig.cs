@@ -69,7 +69,7 @@ namespace Albatross.Hosting {
 			}
 			var location = new string[] {
 				System.Environment.CurrentDirectory
-			}.Union(config.ConfigFile.SkipLast(1)).Union(new string[] { name }).ToArray();
+			}.Union(config.ConfigFile.SkipLast(1)).Union([name]).ToArray();
 			return Path.Join(location);
 		}
 
