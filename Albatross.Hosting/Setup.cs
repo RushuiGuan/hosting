@@ -18,17 +18,9 @@ namespace Albatross.Hosting {
 		protected IHostBuilder hostBuilder;
 		protected IConfiguration configuration;
 		protected SetupSerilog setupSerilog;
-		string GetConfigRoot(string[] args, string? environmentalPrefix) {
-			var builder = new ConfigurationBuilder()
-				.AddEnvironmentVariables(environmentalPrefix)
-				.AddCommandLine(args);
-			var configRoot = builder.Build()["config-root"];
-			return configRoot ?? AppContext.BaseDirectory;
-		}
-		public Setup(string[] args, string? environmentPrefix) {
+		public Setup(string[] args, string configRoot) {
 			var environment = EnvironmentSetting.ASPNETCORE_ENVIRONMENT.Value;
 			hostBuilder = Host.CreateDefaultBuilder(args).UseSerilog();
-			var configRoot = GetConfigRoot(args, environmentPrefix);
 			if (File.Exists(configRoot)) {
 				throw new InvalidOperationException($"Config root {configRoot} is a file.  It should be a directory.");
 			} else if (!Directory.Exists(configRoot)) {
