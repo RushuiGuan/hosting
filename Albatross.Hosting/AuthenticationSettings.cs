@@ -1,6 +1,7 @@
 ﻿using Albatross.Config;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.Extensions.Configuration;
+using System;
 
 namespace Albatross.Hosting {
 	public class AuthenticationSettings : ConfigBase {
@@ -8,7 +9,7 @@ namespace Albatross.Hosting {
 
 		public string? Default { get; set; }
 		public bool UseKerberos { get; set; }
-		public JwtBearerTokenSettings[] BearerTokens { get; set; } = [];
+		public JwtBearerTokenSettings[] BearerTokens { get; set; } = Array.Empty<JwtBearerTokenSettings>();
 
 		public bool HasAny => BearerTokens.Length > 0 || UseKerberos;
 

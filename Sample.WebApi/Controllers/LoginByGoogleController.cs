@@ -1,6 +1,7 @@
 ﻿using Albatross.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 
 namespace Sample.WebApi.Controllers {
@@ -17,7 +18,7 @@ namespace Sample.WebApi.Controllers {
 		}
 
 		[HttpGet("user-claim")]
-		public string[] GetUserClaims() => HttpContext.User?.Claims?.Select(args => $"{args.Type}: {args.Value}")?.ToArray() ?? new string[0];
+		public string[] GetUserClaims() => HttpContext.User?.Claims?.Select(args => $"{args.Type}: {args.Value}")?.ToArray() ?? Array.Empty<string>();
 
 		[HttpGet("login")]
 		public ILogin? GetCurrentLogin() => getCurrentLogin.Get();

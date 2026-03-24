@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -31,7 +31,11 @@ namespace Albatross.Hosting.ExceptionHandling {
 				};
 				context.Response.StatusCode = problem.Status.Value;
 				context.Response.ContentType = MediaTypeNames.Application.ProblemJson;
-				await JsonSerializer.SerializeAsync(context.Response.BodyWriter.AsStream(), problem, SerializerOptions);
+				try {
+					await JsonSerializer.SerializeAsync(context.Response.BodyWriter.AsStream(), problem, SerializerOptions);
+				} catch {
+					// Serialization failure — response headers already sent; nothing more can be done
+				}
 			}
 		}
 	}

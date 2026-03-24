@@ -43,7 +43,7 @@ namespace Albatross.Hosting {
 		}
 
 		protected virtual void ConfigureCors(CorsPolicyBuilder builder) {
-			var cors = this.Configuration.GetSection("cors").Get<string[]>() ?? new string[0];
+			var cors = this.Configuration.GetSection("cors").Get<string[]>() ?? Array.Empty<string>();
 			builder.WithOrigins(cors)
 				.AllowAnyHeader()
 				.AllowAnyMethod()
