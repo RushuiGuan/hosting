@@ -1,10 +1,10 @@
 # Release Notes
 
-## hosting-10.2.0 (2026-03-23)
+## hosting-10.2.0 (2026-03-31)
 
 ### Breaking Changes
 
-- **`Setup` constructor signature changed** - The constructor parameter `bool supressUnhandledArgumentExceptionLogging` has been replaced with `string? environmentPrefix`. Callers must update their constructor call (e.g., `new Setup(args, null)` or pass a prefix string for environment variable filtering).
+- **`Setup` constructor signature changed** - The constructor parameter `bool supressUnhandledArgumentExceptionLogging` has been replaced with `string configRoot`. Callers must pass the configuration root directory explicitly (e.g., `new Setup(args, AppContext.BaseDirectory)`).
 
 - **Removed `SupressUnhandledArgumentExceptionLogging` and `ConfigureLogging()`** - The `SupressUnhandledArgumentExceptionLogging` property and the virtual `ConfigureLogging()` override point have been removed. Serilog filtering must now be configured directly via the `serilog.json` configuration file.
 
@@ -18,7 +18,9 @@
 
 - **Serilog configured from `serilog.json`** - Serilog is now configured by reading `serilog.json` (and `serilog.{environment}.json`) directly via `Configuration` in the `Setup` constructor, replacing the previous `SetupSerilog.UseConfigFile()` approach.
 
-- **`config-root` command line argument** - A new `config-root` command line/environment variable argument allows overriding the base directory from which configuration files are loaded. Defaults to `AppContext.BaseDirectory`.
+- **`config-root` constructor parameter** - The base directory from which configuration files are loaded is now passed directly as the `configRoot` constructor argument to `Setup`, defaulting to `AppContext.BaseDirectory`.
+
+- **`RazorPages` toggle on `Startup`** - A new `protected virtual bool RazorPages` property (default `false`) can be overridden to enable Razor Pages support. When `true`, `AddRazorPages()` is registered and `MapRazorPages()` is wired into the endpoint pipeline.
 
 - **`RunAsync()` uses `await using`** - The bootstrap logger is now disposed asynchronously with `await using` for correct async teardown.
 
