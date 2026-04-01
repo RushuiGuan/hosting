@@ -11,15 +11,15 @@
 	<ItemGroup>
 		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="8.1.0" />
 		<PackageReference Include="Albatross.Config" Version="7.5.11" />
-		<PackageReference Include="Albatross.Logging" Version="10.0.1" />
+		<PackageReference Include="Albatross.Logging" Version="10.0.3" />
 		<PackageReference Include="Albatross.Serialization.Json" Version="10.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="10.0.5" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.5" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="..\icon.png">
