@@ -28,6 +28,7 @@ namespace Albatross.Hosting {
 		protected virtual bool OpenApi { get; } = true;
 		protected virtual bool WebApi { get; } = true;
 		protected virtual bool Spa { get; } = false;
+		protected virtual bool RazorPages { get; } = false;
 
 		/// <summary>
 		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
@@ -152,6 +153,9 @@ namespace Albatross.Hosting {
 					AddOpenApi(services);
 				}
 			}
+			if (RazorPages) {
+				services.AddRazorPages();
+			}
 			if (Spa) { AddSpa(services); }
 			if (this.AuthenticationSettings.HasAny) { AddAccessControl(services); }
 			// add compression
@@ -184,7 +188,10 @@ namespace Albatross.Hosting {
 			if (WebApi) {
 				app.UseCors();
 				if (this.AuthenticationSettings.HasAny) { app.UseAuthentication().UseAuthorization(); }
-				app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+				app.UseEndpoints(endpoints =>  endpoints.MapControllers());
+			}
+			if (RazorPages) {
+				app.UseEndpoints(endpoints =>  endpoints.MapRazorPages());
 			}
 			if (WebApi && OpenApi) { UseOpenApi(app); }
 			if (Spa) { UseSpa(app, logger); }
