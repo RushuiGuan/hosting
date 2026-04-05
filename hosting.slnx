@@ -10,7 +10,9 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="Albatross.Hosting.EFCore/Albatross.Hosting.EFCore.csproj" />
   <Project Path="Albatross.Hosting/Albatross.Hosting.csproj" />
+  <Project Path="Sample.Core/Sample.Core.csproj" />
   <Project Path="Sample.Daemon/Sample.Daemon.csproj" />
   <Project Path="Sample.WebApi/Sample.WebApi.csproj" />
 </Solution>

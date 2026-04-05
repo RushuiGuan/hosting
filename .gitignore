@@ -17,6 +17,7 @@
 tmpclaude-*
 
 # Build results
+[Ss]killTest/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/

@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Albatross.Hosting\Albatross.Hosting.csproj" />
 		<PackageReference Include="NJsonSchema" Version="11.5.2" />
+		<ProjectReference Include="..\Sample.Core\Sample.Core.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="appsettings*.json">
