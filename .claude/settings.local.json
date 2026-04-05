@@ -7,7 +7,8 @@
       "Bash(curl:*)",
       "Bash(pkill:*)",
       "Bash(wc:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(ls:*)"
     ]
   }
 }

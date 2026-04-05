@@ -1,6 +1,18 @@
 # Http Request Logging
-By default `Albatross.Hosting` will log all requests with a source context of `usage`.  The content of the log is a property string that captures the properties of the incoming http requests. The property string has the format of `user_name` `remote-ip` `url` `method`
+
+`Albatross.Hosting` does not include request logging by default. Use `Serilog.AspNetCore`'s `UseSerilogRequestLogging()` middleware to opt in.
+
+Override `Configure` in your `Startup` class and call `UseSerilogRequestLogging()` before `base.Configure(...)`:
+
+```csharp
+public class MyStartup : Albatross.Hosting.Startup {
+    public MyStartup(IConfiguration configuration) : base(configuration) { }
+
+    public override void Configure(IApplicationBuilder app, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<MyStartup> logger) {
+        app.UseSerilogRequestLogging();
+        base.Configure(app, programSetting, environmentSetting, logger);
+    }
+}
 ```
-2025-03-30 08:50:09-04:00 [inf] Usage user_name 192.168.12.25 http://localhost:15000/api/app-info GET
-```
-To disable this feature, override the `Startup.LogUsage` property and set it to false.
+
+Calling it before `base.Configure(...)` ensures it wraps the full request pipeline. Serilog writes one structured log entry per request, including the HTTP method, path, status code, and elapsed time.
