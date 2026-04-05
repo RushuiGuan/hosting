@@ -7,6 +7,8 @@
 		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
 	</PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="Albatross.EFCore" Version="10.0.0-68.main" />
+		<ProjectReference Include="..\Albatross.Hosting.EFCore\Albatross.Hosting.EFCore.csproj" />
 		<ProjectReference Include="..\Albatross.Hosting\Albatross.Hosting.csproj" />
 		<PackageReference Include="NJsonSchema" Version="11.5.2" />
 		<ProjectReference Include="..\Sample.Core\Sample.Core.csproj" />
@@ -23,5 +25,9 @@
 		<Content Update="schema.angular-config.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Repositories\" />
+	  <Folder Include="Services\" />
 	</ItemGroup>
 </Project>

@@ -8,7 +8,8 @@
       "Bash(pkill:*)",
       "Bash(wc:*)",
       "Bash(grep:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(dotnet add:*)"
     ]
   }
 }

@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 namespace Sample.WebApi.Controllers {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class ExceptionTestCaseController : ControllerBase {
-		private readonly ILogger<ExceptionTestCaseController> logger;
+	public class GlobalExceptionExampleController : ControllerBase {
+		private readonly ILogger<GlobalExceptionExampleController> logger;
 
-		public ExceptionTestCaseController(ILogger<ExceptionTestCaseController> logger) {
+		public GlobalExceptionExampleController(ILogger<GlobalExceptionExampleController> logger) {
 			this.logger = logger;
 		}
 

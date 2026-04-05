@@ -6,6 +6,7 @@ using System.Threading;
 
 namespace Sample.WebApi.Controllers {
 	[Route("api/[controller]")]
+	[ApiController]
 	public class ValidationExampleController : ControllerBase {
 
 		[HttpPost]
