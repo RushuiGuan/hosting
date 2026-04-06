@@ -37,6 +37,6 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\Albatross.Hosting.EFCore\Albatross.Hosting.EFCore.csproj" />
+		<ProjectReference Include="..\Albatross.Hosting.EFCore\Albatross.Hosting.EFCore.csproj" />
 	</ItemGroup>
 </Project>

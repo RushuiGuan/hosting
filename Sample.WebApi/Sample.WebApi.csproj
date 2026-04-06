@@ -27,7 +27,7 @@
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Repositories\" />
-	  <Folder Include="Services\" />
+		<Folder Include="Repositories\" />
+		<Folder Include="Services\" />
 	</ItemGroup>
 </Project>
