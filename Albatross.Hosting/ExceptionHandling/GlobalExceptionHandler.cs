@@ -1,3 +1,4 @@
+using Albatross.EFCore;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,27 +9,31 @@ using System.Threading.Tasks;
 
 namespace Albatross.Hosting.ExceptionHandling {
 	public sealed class GlobalExceptionHandler {
-		public static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions {
+		public static readonly JsonSerializerOptions SerializerOptions = new() {
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 			DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
 		};
-
-		public const int BadRequest = 400;
-		public const int InternalServerError = 500;
 
 		public async Task Handle(HttpContext context) {
 			var feature = context.Features.Get<IExceptionHandlerFeature>();
 			var exception = feature?.Error;
 			if (exception != null) {
-				var statusCode = exception is ArgumentException ? BadRequest : InternalServerError;
 				var problem = new ProblemDetails {
-					Status = statusCode,
 					Title = "An error occurred while processing your request",
-					Detail = $"{exception.GetType().FullName}: {exception.Message}",
 					Extensions = {
 						["traceId"] = context.TraceIdentifier
 					}
 				};
+				if (exception is NotFoundException) {
+					problem.Detail = exception.Message;
+					problem.Status = StatusCodes.Status404NotFound;
+				} else if (exception is ArgumentException argEx) {
+					problem.Detail = argEx.Message;
+					problem.Status = StatusCodes.Status400BadRequest;
+				} else {
+					problem.Detail = $"{exception.GetType().Namespace}: {exception.Message}";
+					problem.Status = StatusCodes.Status500InternalServerError;
+				}
 				context.Response.StatusCode = problem.Status.Value;
 				context.Response.ContentType = MediaTypeNames.Application.ProblemJson;
 				try {
