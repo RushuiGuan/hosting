@@ -2,8 +2,8 @@ using Albatross.Hosting;
 using Albatross.Hosting.EFCore;
 using Albatross.Input;
 using Microsoft.AspNetCore.Mvc;
+using Sample.Core.Dtos;
 using Sample.Core.Requests;
-using Sample.WebApi.Models;
 using Sample.WebApi.Repositories;
 using Sample.WebApi.Services;
 using System.Threading;
@@ -22,13 +22,14 @@ namespace Sample.WebApi.Controllers {
 		}
 
 		[HttpPost]
-		public async Task<ActionResult<Company>> Create([FromBody] CreateCompanyRequest request, CancellationToken cancellationToken) {
+		public async Task<ActionResult<CompanyDto>> Create([FromBody] CreateCompanyRequest request, CancellationToken cancellationToken) {
 			if (request.Validate(out var sanitized).HasProblem(out var problem)) {
 				return BadRequest(problem);
 			}
-			return await companyRepository.SaveAndReturn(
-				async ct => await companyService.Create(sanitized.Name, ct),
-				cancellationToken);
+			return await companyRepository.SaveAndReturn(async ct => {
+				var company = await companyService.Create(sanitized.Name, ct);
+				return company.CreateDto();
+				}, cancellationToken);
 		}
 	}
 }
