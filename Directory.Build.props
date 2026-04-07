@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 	<PropertyGroup>
-		<Version>10.2.0-105.main+e056dfa</Version>
+		<Version>10.2.0</Version>
 		<LangVersion>Latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<RepositoryUrl>https://github.com/RushuiGuan/hosting</RepositoryUrl>
@@ -10,8 +10,9 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageIcon>icon.png</PackageIcon>
 		<Authors>Rushui Guan</Authors>
-		<PackageTags>aspnetcore;webapi;hosting;bootstrap;background-service;serilog;openapi;swagger;spa;authentication;jwt;kerberos;dependency-injection;dotnet;configuration
-        </PackageTags>
+		<PackageTags>
+			aspnetcore;webapi;hosting;bootstrap;background-service;serilog;openapi;swagger;spa;authentication;jwt;kerberos;dependency-injection;dotnet;configuration
+		</PackageTags>
 		<PackageReleaseNotes>https://rushuiguan.github.io/hosting/release-notes</PackageReleaseNotes>
 		<!-- SourceLink Configuration -->
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
