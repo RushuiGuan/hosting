@@ -6,6 +6,6 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Albatross.Input" Version="1.0.0-5.main" />
+		<PackageReference Include="Albatross.Input" Version="1.0.0-8.main" />
 	</ItemGroup>
 </Project>

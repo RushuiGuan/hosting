@@ -9,7 +9,7 @@
 		<Description>A library for creating .Net Web Api or Service applications with preconfigured settings</Description>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Albatross.Input" Version="1.0.0-5.main" />
+		<PackageReference Include="Albatross.Input" Version="1.0.0-8.main" />
 		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="8.1.0" />
 		<PackageReference Include="Albatross.Config" Version="7.5.11" />
 		<PackageReference Include="Albatross.Logging" Version="10.0.3" />
