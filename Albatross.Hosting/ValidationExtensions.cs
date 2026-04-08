@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Albatross.Hosting {
 	public static class ValidationExtensions {
-		public static bool HasProblem(this ValidationResult result, [NotNullWhen(true)] out ProblemDetails? details) {
+		public static bool HasProblem(this ValidationResult result, [NotNullWhen(true)] out ValidationProblemDetails? details) {
 			if (!result.IsValid) {
 				details = new ValidationProblemDetails(
 					result.Errors.GroupBy(e => e.PropertyName).ToDictionary(
