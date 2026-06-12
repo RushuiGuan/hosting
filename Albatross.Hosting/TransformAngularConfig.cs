@@ -1,5 +1,6 @@
 ﻿using Albatross.Config;
 using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -68,7 +69,7 @@ namespace Albatross.Hosting {
 				name = $"{Path.GetFileNameWithoutExtension(name)}.{environment}.json";
 			}
 			var location = new string[] {
-				System.Environment.CurrentDirectory
+				AppContext.BaseDirectory,
 			}.Union(config.ConfigFile.SkipLast(1)).Union([name]).ToArray();
 			return Path.Join(location);
 		}
