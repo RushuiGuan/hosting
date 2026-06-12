@@ -11,11 +11,11 @@ namespace Albatross.Hosting {
 		void Transform();
 	}
 	public class TransformAngularConfig : ITransformAngularConfig {
-		private readonly AngularConfig config;
+		private readonly IAngularConfig config;
 		private readonly EnvironmentSetting environmentSetting;
 		private readonly ILogger<TransformAngularConfig> logger;
 
-		public TransformAngularConfig(AngularConfig config, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<TransformAngularConfig> logger) {
+		public TransformAngularConfig(IAngularConfig config, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<TransformAngularConfig> logger) {
 			this.config = config;
 			this.environmentSetting = environmentSetting;
 			this.logger = logger;
