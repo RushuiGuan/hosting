@@ -120,7 +120,7 @@ namespace Albatross.Hosting {
 
 		public IServiceCollection AddSpa(IServiceCollection services) {
 			services.AddSpaStaticFiles(cfg => cfg.RootPath = DefaultApp_RootPath);
-			services.AddConfig<AngularConfig>(true);
+			services.AddConfig<IAngularConfig, AngularConfig>(true);
 			services.AddSingleton<ITransformAngularConfig, TransformAngularConfig>();
 			return services;
 		}
@@ -200,7 +200,7 @@ namespace Albatross.Hosting {
 		}
 
 		public void UseSpa(IApplicationBuilder app, ILogger<Startup> logger) {
-			var config = app.ApplicationServices.GetRequiredService<AngularConfig>();
+			var config = app.ApplicationServices.GetRequiredService<IAngularConfig>();
 			logger.LogInformation("Initializing SPA with request path of '{requestPath}' and baseHref of '{baseRef}'", config.RequestPath, config.BaseHref);
 			// Resolve the static file root relative to the application base directory instead of the
 			// current working directory, which may differ when the app is launched as a service.
