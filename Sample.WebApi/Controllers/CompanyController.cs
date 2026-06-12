@@ -23,11 +23,11 @@ namespace Sample.WebApi.Controllers {
 
 		[HttpPost]
 		public async Task<ActionResult<CompanyDto>> Create([FromBody] CreateCompanyRequest request, CancellationToken cancellationToken) {
-			if (request.Validate(out var sanitized).HasProblem(out var problem)) {
+			if (request.Validate().HasProblem(out var problem)) {
 				return BadRequest(problem);
 			}
 			return await companyRepository.SaveAndReturn(async ct => {
-				var company = await companyService.Create(sanitized.Name, ct);
+				var company = await companyService.Create(request.Name, ct);
 				return company.CreateDto();
 				}, cancellationToken);
 		}

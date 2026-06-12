@@ -9,11 +9,13 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -200,11 +202,20 @@ namespace Albatross.Hosting {
 		public void UseSpa(IApplicationBuilder app, ILogger<Startup> logger) {
 			var config = app.ApplicationServices.GetRequiredService<AngularConfig>();
 			logger.LogInformation("Initializing SPA with request path of '{requestPath}' and baseHref of '{baseRef}'", config.RequestPath, config.BaseHref);
+			// Resolve the static file root relative to the application base directory instead of the
+			// current working directory, which may differ when the app is launched as a service.
+			var rootPath = Path.Combine(AppContext.BaseDirectory, DefaultApp_RootPath);
+			var fileProvider = new PhysicalFileProvider(rootPath);
 			var options = new StaticFileOptions {
 				RequestPath = config.RequestPath,
+				FileProvider = fileProvider,
 			};
-			app.UseSpaStaticFiles(new StaticFileOptions { RequestPath = config.RequestPath });
-			app.Map(config.RequestPath ?? string.Empty, web => web.UseSpa(spa => { }));
+			app.UseSpaStaticFiles(options);
+			app.Map(config.RequestPath ?? string.Empty, web => web.UseSpa(spa => {
+				spa.Options.DefaultPageStaticFileOptions = new StaticFileOptions {
+					FileProvider = fileProvider,
+				};
+			}));
 			app.ApplicationServices.GetRequiredService<ITransformAngularConfig>().Transform();
 		}
 	}

@@ -9,7 +9,8 @@
       "Bash(wc:*)",
       "Bash(grep:*)",
       "Bash(ls:*)",
-      "Bash(dotnet add:*)"
+      "Bash(dotnet add:*)",
+      "PowerShell(dotnet build *)"
     ]
   }
 }

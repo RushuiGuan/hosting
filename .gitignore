@@ -17,6 +17,7 @@
 tmpclaude-*
 
 # Build results
+wwwroot
 [Ss]killTest/
 [Dd]ebug/
 [Dd]ebugPublic/
