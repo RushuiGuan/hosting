@@ -42,7 +42,9 @@ namespace Albatross.Hosting {
 
 		public void UpdateBaseHref() {
 			if (config.BaseHrefFile.Length > 0) {
-				var indexHtml = Path.Join((new string[] { System.Environment.CurrentDirectory }.Union(config.BaseHrefFile)).ToArray());
+				var indexHtml = Path.Join(new string[] {
+					AppContext.BaseDirectory,
+				}.Union(config.BaseHrefFile).ToArray());
 				if (File.Exists(indexHtml)) {
 					logger.LogInformation("Replacing baseHref for {file}", indexHtml);
 					string content;
