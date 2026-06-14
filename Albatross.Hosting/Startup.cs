@@ -35,7 +35,7 @@ namespace Albatross.Hosting {
 		protected virtual bool RazorPages { get; } = false;
 		protected virtual bool SuppressLoggingOfKnownExceptions => false;
 		protected virtual bool MaskExceptionDetail => true;
-		protected virtual IApplicationFeatureProvider[] FeatureProviders => [];
+		protected IApplicationFeatureProvider[] FeatureProviders { get; set; } = [];
 
 		/// <summary>
 		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
