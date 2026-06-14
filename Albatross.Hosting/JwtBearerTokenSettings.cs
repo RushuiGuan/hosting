@@ -12,6 +12,13 @@ namespace Albatross.Hosting {
 		public string? Issuer { get; set; }
 		public bool RequireHttpsMetadata { get; set; } = true;
 		/// <summary>
+		/// When true, JWT validation failures are reported back to the caller in the <c>WWW-Authenticate</c>
+		/// response header (token expiry, issuer/audience mismatch, signature failure, etc.). Useful while
+		/// developing; off by default since it aids reconnaissance in production.
+		/// </summary>
+		public bool IncludeErrorDetails { get; set; } = false;
+
+		/// <summary>
 		/// AKA ClientId
 		/// </summary>
 		public string[] Audience { get; set; } = [];
@@ -30,8 +37,8 @@ namespace Albatross.Hosting {
 
 		public void SetJwtBearerOptions(JwtBearerOptions options) {
 			options.Authority = Authority;
-			options.IncludeErrorDetails = true;
 			options.RequireHttpsMetadata = RequireHttpsMetadata;
+			options.IncludeErrorDetails = IncludeErrorDetails;
 			options.TokenValidationParameters = new TokenValidationParameters {
 				ValidateIssuer = ValidateIssuer,
 				ValidIssuer = Issuer,

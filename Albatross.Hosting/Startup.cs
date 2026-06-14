@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,8 +33,9 @@ namespace Albatross.Hosting {
 		protected virtual bool WebApi { get; } = true;
 		protected virtual bool Spa { get; } = false;
 		protected virtual bool RazorPages { get; } = false;
-		protected virtual bool SupressLoggingOfKnowExceptions => false;
+		protected virtual bool SuppressLoggingOfKnownExceptions => false;
 		protected virtual bool MaskExceptionDetail => true;
+		protected virtual IApplicationFeatureProvider[] FeatureProviders => [];
 
 		/// <summary>
 		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
@@ -146,11 +148,19 @@ namespace Albatross.Hosting {
 			services.TryAddSingleton(provider => provider.GetRequiredService<ILoggerFactory>().CreateLogger("default"));
 			services.AddHttpContextAccessor();
 			if (WebApi) {
-				services.AddControllers(options => {
+				var builder = services.AddControllers(options => {
 					if (this.PlainTextFormatter) {
 						options.InputFormatters.Add(new PlainTextInputFormatter());
 					}
-				}).AddJsonOptions(ConfigureJsonOption);
+				});
+				if (this.FeatureProviders.Any()) {
+					builder.ConfigureApplicationPartManager(apm => {
+						foreach (var provider in this.FeatureProviders) {
+							apm.FeatureProviders.Add(provider);
+						}
+					});
+				}
+				builder.AddJsonOptions(ConfigureJsonOption);
 				services.AddCors(opt => opt.AddDefaultPolicy(ConfigureCors));
 				services.AddAspNetCorePrincipalProvider();
 				if (OpenApi) {
@@ -187,7 +197,7 @@ namespace Albatross.Hosting {
 			app.UseExceptionHandler(new ExceptionHandlerOptions {
 				ExceptionHandler = new GlobalExceptionHandler(this.MaskExceptionDetail).Handle,
 				// only let the middleware log server errors; suppress diagnostics for client 4xx errors
-				SuppressDiagnosticsCallback = this.SupressLoggingOfKnowExceptions ? context => GlobalExceptionHandler.GetStatusCode(context.Exception) < StatusCodes.Status500InternalServerError : null,
+				SuppressDiagnosticsCallback = this.SuppressLoggingOfKnownExceptions ? context => GlobalExceptionHandler.GetStatusCode(context.Exception) < StatusCodes.Status500InternalServerError : null,
 			});
 			app.UseRouting();
 			if (WebApi) {
@@ -214,7 +224,7 @@ namespace Albatross.Hosting {
 				FileProvider = fileProvider,
 			};
 			app.UseSpaStaticFiles(options);
-			app.Map(config.RequestPath ?? string.Empty, web => web.UseSpa(spa => {
+			app.Map(config.RequestPath, web => web.UseSpa(spa => {
 				spa.Options.DefaultPageStaticFileOptions = new StaticFileOptions {
 					FileProvider = fileProvider,
 				};

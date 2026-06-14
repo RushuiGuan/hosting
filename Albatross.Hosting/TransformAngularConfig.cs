@@ -15,7 +15,7 @@ namespace Albatross.Hosting {
 		private readonly EnvironmentSetting environmentSetting;
 		private readonly ILogger<TransformAngularConfig> logger;
 
-		public TransformAngularConfig(IAngularConfig config, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<TransformAngularConfig> logger) {
+		public TransformAngularConfig(IAngularConfig config, EnvironmentSetting environmentSetting, ILogger<TransformAngularConfig> logger) {
 			this.config = config;
 			this.environmentSetting = environmentSetting;
 			this.logger = logger;
@@ -39,7 +39,10 @@ namespace Albatross.Hosting {
 			}
 			UpdateBaseHref();
 		}
-
+		
+		const string BaseUrlRegexPattern ="<\\s*base\\s+href\\s*=\\s*\"[^\"]*\"\\s*>";
+		static readonly Regex BaseUrlRegex = new Regex(BaseUrlRegexPattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
+		
 		public void UpdateBaseHref() {
 			if (config.BaseHrefFile.Length > 0) {
 				var indexHtml = Path.Join(new string[] {
@@ -50,10 +53,8 @@ namespace Albatross.Hosting {
 					string content;
 					using (var reader = new StreamReader(indexHtml)) {
 						content = reader.ReadToEnd();
-						string pattern = "<\\s*base\\s+href\\s*=\\s*\"[a-z0-9_\\-/]*\"\\s*>";
-						Regex regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
 						string replacement = $"<base href=\"{config.BaseHref}\">";
-						content = regex.Replace(content, replacement);
+						content = BaseUrlRegex.Replace(content, replacement);
 					}
 					using (var writer = new StreamWriter(indexHtml)) {
 						writer.Write(content);
