@@ -46,6 +46,7 @@ namespace Sample.WebApi.Controllers {
 				await Task.Delay(10, cancellationToken);
 				yield return i;
 			}
+			await Task.Delay(100);
 			throw new ArgumentException("this is a test exception");
 		}
 

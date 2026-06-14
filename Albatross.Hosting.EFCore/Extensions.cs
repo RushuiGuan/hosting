@@ -25,11 +25,13 @@ namespace Albatross.Hosting.EFCore {
 		public static ActionResult HandleSaveResult(this SaveResults results) {
 			if (results.Success) {
 				return new NoContentResult();
-			} else if (results.NameConflict) {
+			} else if (results.NameConflict || results.ConcurrencyConflict) {
 				return new ConflictObjectResult(new ProblemDetails {
 					Detail = results.Error.Message
 				});
 			} else if (results.ForeignKeyConflict) {
+				// 422 indicates bad input, which in a way can cover some use case of fk conflict
+				// we just use 422 to catch all fk conflict as a fallback
 				return new UnprocessableEntityObjectResult(new ProblemDetails {
 					Detail = results.Error.Message
 				});

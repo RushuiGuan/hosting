@@ -11,7 +11,7 @@
       href: authentication.md
     - name: SPA Hosting
       href: spa-hosting.md
-    - name: Custom Error Response
+    - name: Error Handling and Logging
       href: custom-error-response.md
     - name: Request Logging
       href: request-logging.md

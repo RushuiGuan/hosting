@@ -4,6 +4,7 @@ using Albatross.Hosting.ExceptionHandling;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
@@ -31,6 +32,8 @@ namespace Albatross.Hosting {
 		protected virtual bool WebApi { get; } = true;
 		protected virtual bool Spa { get; } = false;
 		protected virtual bool RazorPages { get; } = false;
+		protected virtual bool SupressLoggingOfKnowExceptions => false;
+		protected virtual bool MaskExceptionDetail => true;
 
 		/// <summary>
 		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
@@ -55,7 +58,6 @@ namespace Albatross.Hosting {
 		}
 
 		#region swagger
-
 		public virtual IServiceCollection AddOpenApi(IServiceCollection services) {
 			services.AddOpenApi(options => {
 				if (this.AuthenticationSettings.BearerTokens.Any()) {
@@ -96,7 +98,6 @@ namespace Albatross.Hosting {
 				};
 			});
 		}
-
 		#endregion
 
 		#region authentication and authorization
@@ -115,6 +116,7 @@ namespace Albatross.Hosting {
 			services.AddAuthorization(ConfigureAuthorization);
 			return services;
 		}
+
 		protected virtual void ConfigureAuthorization(AuthorizationOptions option) { }
 		#endregion
 
@@ -162,21 +164,18 @@ namespace Albatross.Hosting {
 			if (this.AuthenticationSettings.HasAny) { AddAccessControl(services); }
 			// add compression
 			if (this.CompressionMimeTypes.Any()) {
-				services.AddResponseCompression(
-					options => {
-						options.EnableForHttps = true;
-						options.MimeTypes = CompressionMimeTypes;
-						options.Providers.Add<GzipCompressionProvider>();
-						options.Providers.Add<BrotliCompressionProvider>();
-					});
-				services.Configure<GzipCompressionProviderOptions>(
-					options => {
-						options.Level = System.IO.Compression.CompressionLevel.Optimal;
-					});
-				services.Configure<BrotliCompressionProviderOptions>(
-					options => {
-						options.Level = System.IO.Compression.CompressionLevel.Fastest;
-					});
+				services.AddResponseCompression(options => {
+					options.EnableForHttps = true;
+					options.MimeTypes = CompressionMimeTypes;
+					options.Providers.Add<GzipCompressionProvider>();
+					options.Providers.Add<BrotliCompressionProvider>();
+				});
+				services.Configure<GzipCompressionProviderOptions>(options => {
+					options.Level = System.IO.Compression.CompressionLevel.Optimal;
+				});
+				services.Configure<BrotliCompressionProviderOptions>(options => {
+					options.Level = System.IO.Compression.CompressionLevel.Fastest;
+				});
 			}
 		}
 
@@ -185,15 +184,19 @@ namespace Albatross.Hosting {
 				app.UseResponseCompression();
 			}
 			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting, environmentSetting.Value);
-			app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandler = new GlobalExceptionHandler().Handle });
+			app.UseExceptionHandler(new ExceptionHandlerOptions {
+				ExceptionHandler = new GlobalExceptionHandler(this.MaskExceptionDetail).Handle,
+				// only let the middleware log server errors; suppress diagnostics for client 4xx errors
+				SuppressDiagnosticsCallback = this.SupressLoggingOfKnowExceptions ? context => GlobalExceptionHandler.GetStatusCode(context.Exception) < StatusCodes.Status500InternalServerError : null,
+			});
 			app.UseRouting();
 			if (WebApi) {
 				app.UseCors();
 				if (this.AuthenticationSettings.HasAny) { app.UseAuthentication().UseAuthorization(); }
-				app.UseEndpoints(endpoints =>  endpoints.MapControllers());
+				app.UseEndpoints(endpoints => endpoints.MapControllers());
 			}
 			if (RazorPages) {
-				app.UseEndpoints(endpoints =>  endpoints.MapRazorPages());
+				app.UseEndpoints(endpoints => endpoints.MapRazorPages());
 			}
 			if (WebApi && OpenApi) { UseOpenApi(app); }
 			if (Spa) { UseSpa(app, logger); }
