@@ -10,8 +10,8 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Albatross.Input" Version="1.0.0-8.main" />
-		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="8.1.0" />
-		<PackageReference Include="Albatross.Config" Version="7.5.11" />
+		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="8.1.1-57.main" />
+		<PackageReference Include="Albatross.Config" Version="8.0.0-45.main" />
 		<PackageReference Include="Albatross.Logging" Version="10.0.3" />
 		<PackageReference Include="Albatross.Serialization.Json" Version="10.0.0" />
 		<PackageReference Include="FluentValidation" Version="12.1.1" />
