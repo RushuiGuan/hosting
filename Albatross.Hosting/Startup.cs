@@ -28,7 +28,7 @@ namespace Albatross.Hosting {
 	public class Startup {
 		public const string DefaultApp_RootPath = "wwwroot";
 		protected IConfiguration Configuration { get; }
-		protected AuthenticationSettings AuthenticationSettings { get; }
+		protected IConfigureAuthentication ConfigAuthentication { get; }
 		protected virtual bool OpenApi { get; } = true;
 		protected virtual bool WebApi { get; } = true;
 		protected virtual bool Spa { get; } = false;
@@ -45,9 +45,8 @@ namespace Albatross.Hosting {
 
 		public Startup(IConfiguration configuration) {
 			this.Configuration = configuration;
-			this.AuthenticationSettings = new AuthenticationSettings(configuration);
-			this.AuthenticationSettings.Validate();
-			Log.Logger.Information("AspNetCore Startup configuration with authentication={secured}, spa={spa}, swagger={swagger}, webapi={webapi}", this.AuthenticationSettings.HasAny, Spa, OpenApi, WebApi);
+			this.ConfigAuthentication = new AuthenticationConfigurator(configuration);
+			Log.Logger.Information("AspNetCore Startup configuration with authentication={secured}, spa={spa}, swagger={swagger}, webapi={webapi}", this.ConfigAuthentication.HasAnyAuthentication, Spa, OpenApi, WebApi);
 		}
 
 		protected virtual void ConfigureCors(CorsPolicyBuilder builder) {
@@ -62,7 +61,7 @@ namespace Albatross.Hosting {
 		#region swagger
 		public virtual IServiceCollection AddOpenApi(IServiceCollection services) {
 			services.AddOpenApi(options => {
-				if (this.AuthenticationSettings.BearerTokens.Any()) {
+				if (this.ConfigAuthentication.UseAnyBearerToken) {
 					options.AddDocumentTransformer((doc, context, cancellationToken) => {
 						doc.Components = doc.Components ?? new OpenApiComponents();
 						doc.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
@@ -104,18 +103,9 @@ namespace Albatross.Hosting {
 
 		#region authentication and authorization
 		protected virtual IServiceCollection AddAccessControl(IServiceCollection services) {
-			if (this.AuthenticationSettings.UseKerberos || this.AuthenticationSettings.BearerTokens.Any()) {
-				var builder = services.AddAuthentication(option => {
-					option.DefaultScheme = this.AuthenticationSettings.GetDefault();
-				});
-				foreach (var token in this.AuthenticationSettings.BearerTokens) {
-					builder.AddJwtBearer(token.Provider, token.SetJwtBearerOptions);
-				}
-				if (this.AuthenticationSettings.UseKerberos) {
-					builder.AddNegotiate();
-				}
+			if (this.ConfigAuthentication.Configure(services)) {
+				services.AddAuthorization(ConfigureAuthorization);
 			}
-			services.AddAuthorization(ConfigureAuthorization);
 			return services;
 		}
 
@@ -171,7 +161,7 @@ namespace Albatross.Hosting {
 				services.AddRazorPages();
 			}
 			if (Spa) { AddSpa(services); }
-			if (this.AuthenticationSettings.HasAny) { AddAccessControl(services); }
+			AddAccessControl(services);
 			// add compression
 			if (this.CompressionMimeTypes.Any()) {
 				services.AddResponseCompression(options => {
@@ -202,7 +192,7 @@ namespace Albatross.Hosting {
 			app.UseRouting();
 			if (WebApi) {
 				app.UseCors();
-				if (this.AuthenticationSettings.HasAny) { app.UseAuthentication().UseAuthorization(); }
+				if (this.ConfigAuthentication.HasAnyAuthentication) { app.UseAuthentication().UseAuthorization(); }
 				app.UseEndpoints(endpoints => endpoints.MapControllers());
 			}
 			if (RazorPages) {
@@ -224,11 +214,12 @@ namespace Albatross.Hosting {
 				FileProvider = fileProvider,
 			};
 			app.UseSpaStaticFiles(options);
-			app.Map(config.RequestPath, web => web.UseSpa(spa => {
-				spa.Options.DefaultPageStaticFileOptions = new StaticFileOptions {
-					FileProvider = fileProvider,
-				};
-			}));
+			app.Map(config.RequestPath,
+				web => web.UseSpa(spa => {
+					spa.Options.DefaultPageStaticFileOptions = new StaticFileOptions {
+						FileProvider = fileProvider,
+					};
+				}));
 			app.ApplicationServices.GetRequiredService<ITransformAngularConfig>().Transform();
 		}
 	}

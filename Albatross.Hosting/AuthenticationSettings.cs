@@ -1,6 +1,8 @@
 ﻿using Albatross.Config;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 
 namespace Albatross.Hosting {
@@ -11,14 +13,14 @@ namespace Albatross.Hosting {
 		public bool UseKerberos { get; set; }
 		public JwtBearerTokenSettings[] BearerTokens { get; set; } = Array.Empty<JwtBearerTokenSettings>();
 
-		public bool HasAny => BearerTokens.Length > 0 || UseKerberos;
+		public bool HasAnyAuthentication => BearerTokens.Length > 0 || UseKerberos;
+		public bool UseAnyBearerToken => BearerTokens.Length > 0;
 
 		public override void Validate() {
 			foreach (var bearerToken in BearerTokens) {
 				bearerToken.Validate();
 			}
 		}
-
 		public string? GetDefault() {
 			if (!string.IsNullOrEmpty(Default)) {
 				return Default;
