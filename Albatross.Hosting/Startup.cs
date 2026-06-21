@@ -28,7 +28,7 @@ namespace Albatross.Hosting {
 	public class Startup {
 		public const string DefaultApp_RootPath = "wwwroot";
 		protected IConfiguration Configuration { get; }
-		protected IConfigureAuthentication ConfigAuthentication { get; }
+		protected IConfigureAuthentication ConfigAuthentication { get; set; }
 		protected virtual bool OpenApi { get; } = true;
 		protected virtual bool WebApi { get; } = true;
 		protected virtual bool Spa { get; } = false;
@@ -46,7 +46,12 @@ namespace Albatross.Hosting {
 		public Startup(IConfiguration configuration) {
 			this.Configuration = configuration;
 			this.ConfigAuthentication = new AuthenticationConfigurator(configuration);
-			Log.Logger.Information("AspNetCore Startup configuration with authentication={secured}, spa={spa}, swagger={swagger}, webapi={webapi}", this.ConfigAuthentication.HasAnyAuthentication, Spa, OpenApi, WebApi);
+			var uri = configuration.GetValue<string>("urls");
+			if (string.IsNullOrEmpty(uri)) {
+				Log.Logger.ForContext<Startup>().Information("AspNetCore Starting up");
+			} else {
+				Log.Logger.ForContext<Startup>().Information("AspNetCore Starting up at {uri}", uri);
+			}
 		}
 
 		protected virtual void ConfigureCors(CorsPolicyBuilder builder) {
@@ -55,7 +60,7 @@ namespace Albatross.Hosting {
 				.AllowAnyHeader()
 				.AllowAnyMethod()
 				.AllowCredentials();
-			Log.Logger.Information("Cors configuration: {cors}", cors.Length == 0 ? "None" : String.Join(",", cors));
+			Log.Logger.ForContext<Startup>().Information("Cors configuration: {cors}", cors.Length == 0 ? "None" : String.Join(",", cors));
 		}
 
 		#region swagger
@@ -76,8 +81,7 @@ namespace Albatross.Hosting {
 						doc.Security ??= new List<OpenApiSecurityRequirement>();
 						doc.Security.Add(new OpenApiSecurityRequirement {
 							{
-								new OpenApiSecuritySchemeReference("Bearer", doc, null),
-								new List<string>()
+								new OpenApiSecuritySchemeReference("Bearer", doc, null), new List<string>()
 							}
 						});
 						return Task.CompletedTask;
@@ -183,7 +187,7 @@ namespace Albatross.Hosting {
 			if (this.CompressionMimeTypes.Any()) {
 				app.UseResponseCompression();
 			}
-			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting, environmentSetting.Value);
+			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting.App, environmentSetting.Value);
 			app.UseExceptionHandler(new ExceptionHandlerOptions {
 				ExceptionHandler = new GlobalExceptionHandler(this.MaskExceptionDetail).Handle,
 				// only let the middleware log server errors; suppress diagnostics for client 4xx errors
