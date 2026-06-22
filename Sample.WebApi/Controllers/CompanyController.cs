@@ -1,5 +1,4 @@
 using Albatross.Hosting;
-using Albatross.Hosting.EFCore;
 using Albatross.Input;
 using Microsoft.AspNetCore.Mvc;
 using Sample.Core.Dtos;
@@ -29,7 +28,7 @@ namespace Sample.WebApi.Controllers {
 			return await companyRepository.SaveAndReturn(async ct => {
 				var company = await companyService.Create(request.Name, ct);
 				return company.CreateDto();
-				}, cancellationToken);
+				}, true, cancellationToken);
 		}
 	}
 }

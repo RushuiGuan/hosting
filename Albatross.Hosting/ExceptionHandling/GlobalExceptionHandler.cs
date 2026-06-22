@@ -1,9 +1,8 @@
-using Albatross.EFCore;
+using Albatross.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.Net.Mime;
 using System.Security.Authentication;
 using System.Text.Json;
@@ -33,36 +32,30 @@ namespace Albatross.Hosting.ExceptionHandling {
 		/// exception handler middleware's <c>SuppressDiagnosticsCallback</c> can reuse it, keeping the logging
 		/// decision consistent with the response status (only 5xx is treated as a server error worth logging).
 		/// </summary>
-		/// <returns>
-		/// 404 for <see cref="NotFoundException"/>; 400 for argument/validation exceptions; 401 for
-		/// <see cref="AuthenticationException"/>; 403 for <see cref="UnauthorizedAccessException"/>; 409 for
-		/// <see cref="ConflictException"/>; otherwise 500.
-		/// </returns>
 		public static int GetStatusCode(Exception exception) {
-			if (exception is NotFoundException) {
-				return StatusCodes.Status404NotFound;
-			} else if (exception is ArgumentException || exception is ValidationException || exception is FluentValidation.ValidationException) {
-				return StatusCodes.Status400BadRequest;
-			} else if (exception is AuthenticationException) {
-				// http 401 is actually unauthenticated.  status code description is poorly named
-				return StatusCodes.Status401Unauthorized;
-			} else if (exception is UnauthorizedAccessException) {
-				// http status naming is incorrect here.
-				// UnauthorizedAccessException means user does not have enough permission to access
-				// therefore mapping to 403 forbidden not 401 unauthorized
-				return StatusCodes.Status403Forbidden;
-			} else if (exception is ConflictException) {
-				return StatusCodes.Status409Conflict;
-			} else {
-				return StatusCodes.Status500InternalServerError;
-			}
+			return exception switch {
+				NotFoundException => StatusCodes.Status404NotFound,
+				ConflictException => StatusCodes.Status409Conflict,
+				ValidationException => StatusCodes.Status422UnprocessableEntity,
+				FluentValidation.ValidationException => StatusCodes.Status422UnprocessableEntity,
+				System.ComponentModel.DataAnnotations.ValidationException => StatusCodes.Status422UnprocessableEntity,
+				ArgumentException => StatusCodes.Status400BadRequest,
+				NotSupportedException => StatusCodes.Status501NotImplemented,
+				NotAuthenticatedException => StatusCodes.Status401Unauthorized,
+				AuthenticationException => StatusCodes.Status401Unauthorized,
+				ForbiddenException => StatusCodes.Status403Forbidden,
+				AccessViolationException => StatusCodes.Status403Forbidden,
+				UnauthorizedAccessException => StatusCodes.Status403Forbidden,
+				PreconditionFailedException => StatusCodes.Status412PreconditionFailed,
+				TimeoutException => StatusCodes.Status408RequestTimeout,
+				_ => StatusCodes.Status500InternalServerError,
+			};
 		}
 
 		/// <param name="maskExceptionDetail">
-		/// When true, the detail of 500 responses is replaced with a generic message so internal information
-		/// (sql, file paths, connection strings, etc.) is not leaked to the caller. Messages of known 4xx
-		/// exceptions are always returned regardless of this setting. Enable for applications with high security
-		/// requirements; leave off for internal applications where the detail aids diagnostics.
+		/// When true, the detail of all error responses is set to null so internal information is not leaked
+		/// to the caller. Enable for applications with high security requirements; leave off for internal
+		/// applications where the detail aids diagnostics.
 		/// </param>
 		public GlobalExceptionHandler(bool maskExceptionDetail) {
 			this.maskExceptionDetail = maskExceptionDetail;
@@ -90,18 +83,7 @@ namespace Albatross.Hosting.ExceptionHandling {
 						["traceId"] = context.TraceIdentifier
 					}
 				};
-				if (status == StatusCodes.Status500InternalServerError) {
-					// unexpected server error: the message can carry internals (sql, file paths, connection
-					// strings, etc.), so mask it when configured.  the full exception is always written to the
-					// server log, and the caller can quote the trace id to correlate.
-					problem.Detail = maskExceptionDetail
-						? "An unexpected error occurred.  Please provide the trace id to support for assistance."
-						: $"{exception.GetType().FullName}: {exception.Message}";
-				} else {
-					// known/expected exceptions (validation, not found, conflict, etc.) carry intentional,
-					// client-safe messages that are part of the api contract, so always return them
-					problem.Detail = exception.Message;
-				}
+				problem.Detail = maskExceptionDetail ? null : exception.Message;
 				context.Response.StatusCode = status;
 				context.Response.ContentType = MediaTypeNames.Application.ProblemJson;
 				try {

@@ -7,8 +7,7 @@
 		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Albatross.EFCore" Version="10.0.0-99.main" />
-		<ProjectReference Include="..\Albatross.Hosting.EFCore\Albatross.Hosting.EFCore.csproj" />
+		<PackageReference Include="Albatross.EFCore" Version="10.0.0-101.main" />
 		<ProjectReference Include="..\Albatross.Hosting\Albatross.Hosting.csproj" />
 		<PackageReference Include="NJsonSchema" Version="11.6.1" />
 		<ProjectReference Include="..\Sample.Core\Sample.Core.csproj" />

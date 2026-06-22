@@ -1,4 +1,5 @@
 using Albatross.EFCore;
+using Albatross.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Sample.WebApi.Models;
 using System;
@@ -14,10 +15,8 @@ namespace Sample.WebApi.Repositories {
 	}
 
 	public class CompanyRepository : Repository<ISampleDbSession>, ICompanyRepository {
-		public CompanyRepository(ISampleDbSession session) : base(session) { }
+		public CompanyRepository(ISampleDbSession session, ISemanticExceptionConverter exceptionConverter) : base(session, exceptionConverter) { }
 
-		public override bool IsUniqueConstraintViolation(Exception err) => false;
-		public override bool IsForeignKeyConstraintViolation(Exception err) => false;
 
 		public Task<List<Company>> GetAll(CancellationToken cancellationToken) =>
 			session.DbContext.Set<Company>().ToListAsync(cancellationToken);

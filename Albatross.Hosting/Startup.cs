@@ -29,19 +29,19 @@ namespace Albatross.Hosting {
 		public const string DefaultApp_RootPath = "wwwroot";
 		protected IConfiguration Configuration { get; }
 		protected IConfigureAuthentication ConfigAuthentication { get; set; }
-		protected virtual bool OpenApi { get; } = true;
-		protected virtual bool WebApi { get; } = true;
-		protected virtual bool Spa { get; } = false;
-		protected virtual bool RazorPages { get; } = false;
-		protected virtual bool SuppressLoggingOfKnownExceptions => false;
-		protected virtual bool MaskExceptionDetail => true;
+		protected bool OpenApi { get; set; } = true;
+		protected bool WebApi { get; set; } = true;
+		protected bool Spa { get; set; } = false;
+		protected bool RazorPages { get; set; } = false;
+		protected bool SuppressLoggingOfKnownExceptions { get; set; } = false;
+		protected bool MaskExceptionDetail { get; set; } = true;
 		protected IApplicationFeatureProvider[] FeatureProviders { get; set; } = [];
 
 		/// <summary>
 		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
 		/// the response will send back utf8 encoded text
 		/// </summary>
-		public virtual bool PlainTextFormatter { get; } = true;
+		protected bool PlainTextFormatter { get; set; } = true;
 
 		public Startup(IConfiguration configuration) {
 			this.Configuration = configuration;
@@ -139,6 +139,7 @@ namespace Albatross.Hosting {
 		];
 
 		public virtual void ConfigureServices(IServiceCollection services) {
+			services.TryAddSingleton<IExceptionHandler>(provider => new DefaultExceptionHandler(this.MaskExceptionDetail, provider.GetRequiredService<ILogger<DefaultExceptionHandler>>()));
 			services.TryAddSingleton(provider => provider.GetRequiredService<ILoggerFactory>().CreateLogger("default"));
 			services.AddHttpContextAccessor();
 			if (WebApi) {

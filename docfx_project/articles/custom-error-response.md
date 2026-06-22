@@ -1,28 +1,64 @@
 # Error Handling and Logging
 
-`Albatross.Hosting` registers a global exception handler that acts as a fallback for unhandled exceptions, converting them into consistent [RFC 7807](https://tools.ietf.org/html/rfc7807) `ProblemDetails` responses. It is a safety net only — expected error conditions should be handled explicitly in controller actions with `ActionResult`. The global handler also controls two cross-cutting concerns: which exceptions are logged, and how much detail is returned to the caller.
+`Albatross.Hosting` provides two layers of exception handling:
 
-## Handling Errors with ActionResult
+1. **`IExceptionHandler`** — an injectable service for controller-level exception handling. Controllers catch exceptions from services and repositories, then delegate to `IExceptionHandler.Handle` to produce a consistent `ActionResult`. This is the primary error handling mechanism.
+2. **`GlobalExceptionHandler`** — a middleware-level fallback that catches any unhandled exception and converts it into an [RFC 7807](https://tools.ietf.org/html/rfc7807) `ProblemDetails` response. This is a safety net only.
 
-Handle known errors explicitly by returning an `ActionResult`. This makes the error response intentional, self-documenting, and gives full control over the status code and body.
+Both layers share the same exception-to-status-code mapping and detail masking behavior.
+
+## Controller-Level Exception Handling
+
+Inject `IExceptionHandler` into your controller and use it to handle exceptions from service/repository calls. This keeps error handling explicit and gives you control over the response:
 
 ```csharp
-[HttpGet("{id}")]
-public ActionResult<Item> GetItem(int id) {
-    if (id <= 0) {
-        return BadRequest(new { message = "Id must be positive" });
+[ApiController]
+[Route("api/[controller]")]
+public class CompanyController : ControllerBase {
+    private readonly ICompanyRepository companyRepository;
+    private readonly IExceptionHandler exceptionHandler;
+
+    public CompanyController(ICompanyRepository companyRepository, IExceptionHandler exceptionHandler) {
+        this.companyRepository = companyRepository;
+        this.exceptionHandler = exceptionHandler;
     }
-    var item = _repository.Find(id);
-    if (item == null) {
-        return NotFound(new { message = $"Item {id} not found" });
+
+    [HttpPost]
+    public async Task<ActionResult<CompanyDto>> Create(CreateCompanyRequest request, CancellationToken cancellationToken) {
+        try {
+            var company = await companyService.Create(request.Name, cancellationToken);
+            await companyRepository.SaveChangesAsync(cancellationToken);
+            return new OkObjectResult(company.CreateDto());
+        } catch (Exception err) {
+            return exceptionHandler.Handle(err, null);
+        }
     }
-    return item;
 }
 ```
 
+The `Handle` method accepts an optional custom handler (`Func<Exception, bool, ActionResult?>`) for edge cases where the default mapping doesn't fit. Return `null` from the custom handler to fall through to the default behavior:
+
+```csharp
+return exceptionHandler.Handle(err, (ex, showDetail) => {
+    if (ex is DbUpdateException dbEx && IsSpecificConstraint(dbEx)) {
+        var detail = showDetail ? ex.Message : null;
+        return new ConflictObjectResult(new ProblemDetails { Detail = detail });
+    }
+    return null; // fall through to default handling
+});
+```
+
+### Logging
+
+`DefaultExceptionHandler` logs every exception it handles:
+- **4xx exceptions** — logged at `Warning` level
+- **500 exceptions** — logged at `Error` level
+
+This ensures that exceptions caught at the controller level are never silently swallowed.
+
 ## Global Exception Handler (Fallback)
 
-The handler catches any unhandled exception that propagates out of a controller action. It is wired into ASP.NET Core's `IApplicationBuilder.UseExceptionHandler` middleware. When an unhandled exception occurs:
+The `GlobalExceptionHandler` catches any unhandled exception that propagates out of a controller action. It is wired into ASP.NET Core's `IApplicationBuilder.UseExceptionHandler` middleware. When an unhandled exception occurs:
 
 1. The `ExceptionHandlerMiddleware` catches the exception.
 2. `GlobalExceptionHandler.Handle` is invoked.
@@ -30,22 +66,22 @@ The handler catches any unhandled exception that propagates out of a controller 
 
 If the response has already started, the handler does nothing — the status code and body can no longer be changed at that point, and the framework logs the exception regardless.
 
-### Status Code Mapping
+## Status Code Mapping
 
-The exception type determines the HTTP status code via `GlobalExceptionHandler.GetStatusCode`:
+Both `IExceptionHandler` and `GlobalExceptionHandler` use the same exception-to-status-code mapping:
 
 | Exception Type | Status Code |
 |----------------|-------------|
 | `NotFoundException` | 404 Not Found |
-| `ArgumentException` (and derived), `System.ComponentModel.DataAnnotations.ValidationException`, `FluentValidation.ValidationException` | 400 Bad Request |
-| `AuthenticationException` | 401 Unauthorized |
-| `UnauthorizedAccessException` | 403 Forbidden |
 | `ConflictException` | 409 Conflict |
+| `ValidationException`, `FluentValidation.ValidationException`, `System.ComponentModel.DataAnnotations.ValidationException` | 422 Unprocessable Entity |
+| `ArgumentException` | 400 Bad Request |
+| `NotSupportedException` | 501 Not Implemented |
+| `NotAuthenticatedException`, `AuthenticationException` | 401 Unauthorized |
+| `ForbiddenException`, `AccessViolationException`, `UnauthorizedAccessException` | 403 Forbidden |
+| `PreconditionFailedException` | 412 Precondition Failed |
+| `TimeoutException` | 408 Request Timeout |
 | All other exceptions | 500 Internal Server Error |
-
-> Note on naming: HTTP 401 is really *unauthenticated* and 403 is *unauthorized*. `AuthenticationException` (failure to authenticate) maps to 401, while `UnauthorizedAccessException` (insufficient permission) maps to 403.
-
-Exceptions mapped to a 4xx status are referred to below as **known** exceptions; an exception mapped to 500 is an **unexpected** server error.
 
 ### Response Format
 
@@ -67,26 +103,22 @@ Exceptions mapped to a 4xx status are referred to below as **known** exceptions;
 
 ## Masking Error Detail
 
-The `detail` field is populated differently for known and unexpected errors:
+When `MaskExceptionDetail` is `true`, the `detail` field is set to `null` for all error responses. This prevents leaking internal information (SQL, file paths, connection strings) to the caller. When `false`, `detail` contains the exception message.
 
-- **Known (4xx) exceptions** — `detail` is always the `exception.Message`. These messages are intentional and part of the API contract (validation failures, "not found", conflict reasons), so the client always receives them.
-- **Unexpected (500) errors** — the message is uncontrolled and may contain internals (SQL, file paths, connection strings). Its detail depends on the `MaskExceptionDetail` property:
+| `MaskExceptionDetail` | `detail` value |
+|-----------------------|----------------|
+| `false` | `exception.Message` — full diagnostics |
+| `true` | `null` — no detail returned |
 
-| `MaskExceptionDetail` | 500 `detail` value |
-|-----------------------|--------------------|
-| `false` | `{ExceptionType.FullName}: {message}` — full diagnostics |
-| `true` | Generic message: `"An unexpected error occurred. Please provide the trace id to support for assistance."` |
+The full exception is always written to the server log, so masking the response never loses diagnostic information — use the `traceId` to find the logged entry.
 
-Either way the full exception is written to the server log, so masking the response never loses diagnostic information — use the `traceId` to find the logged entry.
-
-Override `MaskExceptionDetail` on your `Startup` to choose the posture. Enable masking for applications with high security requirements; leave it off for internal applications where the detail aids diagnostics:
+Set `MaskExceptionDetail` on your `Startup` subclass. Enable masking for applications with high security requirements; leave it off for internal applications where the detail aids diagnostics:
 
 ```csharp
 public class MyStartup : Albatross.Hosting.Startup {
-    public MyStartup(IConfiguration configuration) : base(configuration) { }
-
-    // hide internal 500 detail from callers
-    protected override bool MaskExceptionDetail => true;
+    public MyStartup(IConfiguration configuration) : base(configuration) {
+        MaskExceptionDetail = true;
+    }
 }
 ```
 
@@ -94,19 +126,18 @@ public class MyStartup : Albatross.Hosting.Startup {
 
 `ExceptionHandlerMiddleware` logs every exception it handles as an error. Because `Albatross.Hosting` wires the handler as an `ExceptionHandler` delegate (rather than a DI-registered `IExceptionHandler`), the .NET 10 default of suppressing diagnostics for handled exceptions does **not** apply — without intervention, even 4xx client errors would be logged as server errors and create noise.
 
-To control this, `Startup` configures the middleware's `SuppressDiagnosticsCallback` from the `SupressLoggingOfKnowExceptions` property:
+To control this, `Startup` configures the middleware's `SuppressDiagnosticsCallback` from the `SuppressLoggingOfKnownExceptions` property:
 
-| `SupressLoggingOfKnowExceptions` | Logging behavior |
-|----------------------------------|------------------|
+| `SuppressLoggingOfKnownExceptions` | Logging behavior |
+|-------------------------------------|------------------|
 | `true` | Only unexpected (500) errors are logged; known 4xx exceptions are suppressed |
 | `false` | All handled exceptions are logged (framework default) |
 
 ```csharp
 public class MyStartup : Albatross.Hosting.Startup {
-    public MyStartup(IConfiguration configuration) : base(configuration) { }
-
-    // keep the log focused on real server errors
-    protected override bool SupressLoggingOfKnowExceptions => true;
+    public MyStartup(IConfiguration configuration) : base(configuration) {
+        SuppressLoggingOfKnownExceptions = true;
+    }
 }
 ```
 
@@ -118,16 +149,11 @@ For per-request logging (method, path, status, elapsed time) see [Http Request L
 
 | Scenario | Recommended Approach |
 |----------|---------------------|
-| Known error conditions | Return `ActionResult` |
-| Validation errors | Return `BadRequest()` or throw a validation exception (→ 400) |
-| Not found errors | Return `NotFound()` or throw `NotFoundException` (→ 404) |
-| Unexpected errors | Let exceptions propagate (fallback returns 500) |
-
-### Avoid Anti-Patterns
-
-1. **Don't rely on the global handler for expected errors** — handle them explicitly with `ActionResult`.
-2. **Don't use exceptions for flow control** — exceptions should be exceptional.
-3. **Don't expose sensitive information** — enable `MaskExceptionDetail` when 500 messages may contain internals.
+| Known error conditions | Catch and handle via `IExceptionHandler` |
+| Validation errors | Throw `ValidationException` (→ 422) or `ArgumentException` (→ 400) |
+| Not found errors | Throw `NotFoundException` (→ 404) |
+| Edge cases | Use the custom handler callback on `IExceptionHandler.Handle` |
+| Unexpected errors | Let exceptions propagate to the global fallback (→ 500) |
 
 ## Sample Code
 

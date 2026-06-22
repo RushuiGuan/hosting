@@ -9,6 +9,7 @@
 		<Description>A library for creating .Net Web Api or Service applications with preconfigured settings</Description>
 	</PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="Albatross.Exceptions" Version="1.0.0-4.main" />
 		<PackageReference Include="Albatross.Input" Version="1.0.0-8.main" />
 		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="8.1.1-57.main" />
 		<PackageReference Include="Albatross.Config" Version="8.0.0-45.main" />
@@ -36,8 +37,5 @@
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>
-	</ItemGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\Albatross.Hosting.EFCore\Albatross.Hosting.EFCore.csproj" />
 	</ItemGroup>
 </Project>

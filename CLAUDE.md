@@ -36,8 +36,9 @@ This is a .NET bootstrapping library (`Albatross.Hosting`) that simplifies creat
 **Startup** (`Albatross.Hosting/Startup.cs`) - Web application configuration base class:
 - Override `ConfigureServices()` to register dependencies
 - Override `Configure()` to customize the request pipeline
-- Toggle features via properties: `OpenApi`, `WebApi`, `Spa`, `LogUsage`, `PlainTextFormatter`
-- Authentication configured via `AuthenticationSettings` from config
+- Toggle features via settable properties: `OpenApi`, `WebApi`, `Spa`, `PlainTextFormatter`, `MaskExceptionDetail`, `SuppressLoggingOfKnownExceptions`
+- Authentication configured via `IConfigureAuthentication` (default: `AuthenticationConfigurator`)
+- Exception handling via injectable `IExceptionHandler` (default: `DefaultExceptionHandler`)
 
 ### Application Patterns
 
