@@ -1,6 +1,5 @@
 # packages
 Albatross.Hosting
-Albatross.Hosting.EFCore
 
 # services
 Sample.WebApi
