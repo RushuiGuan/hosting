@@ -1,10 +1,12 @@
 using Albatross.Hosting;
+using Albatross.Hosting.ExceptionHandling;
 using Albatross.Input;
 using Microsoft.AspNetCore.Mvc;
 using Sample.Core.Dtos;
 using Sample.Core.Requests;
 using Sample.WebApi.Repositories;
 using Sample.WebApi.Services;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,10 +15,12 @@ namespace Sample.WebApi.Controllers {
 	[ApiController]
 	public class CompanyController : ControllerBase {
 		readonly ICompanyService companyService;
+		private readonly IExceptionHandler errHandler;
 		readonly ICompanyRepository companyRepository;
 
-		public CompanyController(ICompanyService companyService, ICompanyRepository companyRepository) {
+		public CompanyController(ICompanyService companyService, IExceptionHandler errHandler, ICompanyRepository companyRepository) {
 			this.companyService = companyService;
+			this.errHandler = errHandler;
 			this.companyRepository = companyRepository;
 		}
 
@@ -25,10 +29,13 @@ namespace Sample.WebApi.Controllers {
 			if (request.Validate().HasProblem(out var problem)) {
 				return BadRequest(problem);
 			}
-			return await companyRepository.SaveAndReturn(async ct => {
-				var company = await companyService.Create(request.Name, ct);
+			try {
+				var company = await companyService.Create(request.Name, cancellationToken);
+				await this.companyRepository.SaveChangesAsync(cancellationToken);
 				return company.CreateDto();
-				}, true, cancellationToken);
+			} catch (Exception err) {
+				return errHandler.Handle(err, null);
+			}
 		}
 	}
 }
