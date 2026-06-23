@@ -9,7 +9,7 @@
 		<Description>A library for creating .Net Web Api or Service applications with preconfigured settings</Description>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Albatross.Exceptions" Version="1.0.0-4.main" />
+		<PackageReference Include="Albatross.Exceptions" Version="1.0.0-6.main" />
 		<PackageReference Include="Albatross.Input" Version="1.0.0-8.main" />
 		<PackageReference Include="Albatross.Authentication.AspNetCore" Version="8.1.1-57.main" />
 		<PackageReference Include="Albatross.Config" Version="8.0.0-45.main" />
@@ -22,7 +22,7 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.9" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.9" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="..\icon.png">
