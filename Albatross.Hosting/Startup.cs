@@ -76,7 +76,7 @@ namespace Albatross.Hosting {
 							Scheme = "Bearer",
 							BearerFormat = "JWT",
 							In = ParameterLocation.Header,
-							Description = "Enter your JWT token. Do not prefix the token with 'Bearer: '"
+							Description = "Enter raw JWT token only. Do NOT prefix the token with 'Bearer'"
 						};
 						doc.Security ??= new List<OpenApiSecurityRequirement>();
 						doc.Security.Add(new OpenApiSecurityRequirement {
