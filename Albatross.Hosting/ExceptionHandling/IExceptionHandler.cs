@@ -10,6 +10,17 @@ namespace Albatross.Hosting.ExceptionHandling {
 		ActionResult Handle(Exception exception, Func<Exception, bool, ActionResult?>? customHandler);
 	}
 	public class DefaultExceptionHandler : IExceptionHandler {
+		public const string NotFoundMessage = "Not found";
+		public const string ConflictMessage = "Conflict";
+		public const string ValidationFailedMessage = "Validation failed";
+		public const string BadRequestMessage = "Bad request";
+		public const string NotAuthenticatedMessage = "Not authenticated";
+		public const string ForbiddenMessage = "Forbidden";
+		public const string PreconditionFailedMessage = "Precondition failed";
+		public const string NotSupportedMessage = "Not supported";
+		public const string RequestTimeoutMessage = "Request timeout";
+		public const string UnhandledExceptionMessage = "Unhandled exception";
+
 		private readonly ILogger logger;
 		public DefaultExceptionHandler(bool maskExceptionDetail, ILogger logger) {
 			MaskExceptionDetail = maskExceptionDetail;
@@ -22,41 +33,49 @@ namespace Albatross.Hosting.ExceptionHandling {
 			var detail = MaskExceptionDetail ? null : err.Message;
 			switch (err) {
 				case NotFoundException:
-					logger.LogWarning(err, "Not found");
-					return new NotFoundObjectResult(new ProblemDetails { Detail = detail });
+					logger.LogWarning(err, NotFoundMessage);
+					return new NotFoundObjectResult(new ProblemDetails {
+						Title = NotFoundMessage,
+						Status = StatusCodes.Status404NotFound,
+						Detail = detail
+					});
 				case ConflictException:
-					logger.LogWarning(err, "Conflict");
-					return new ConflictObjectResult(new ProblemDetails { Detail = detail });
+					logger.LogWarning(err, ConflictMessage);
+					return new ConflictObjectResult(new ProblemDetails {
+						Title = ConflictMessage,
+						Status = StatusCodes.Status409Conflict,
+						Detail = detail
+					});
 				case ValidationException:
-					logger.LogWarning(err, "Validation failed");
-					return new UnprocessableEntityObjectResult(new ProblemDetails { Detail = detail });
+					logger.LogWarning(err, ValidationFailedMessage);
+					return new UnprocessableEntityObjectResult(new ProblemDetails { Title = ValidationFailedMessage, Status = StatusCodes.Status422UnprocessableEntity, Detail = detail });
 				case ArgumentException:
-					logger.LogWarning(err, "Bad request");
-					return new BadRequestObjectResult(new ProblemDetails { Detail = detail });
+					logger.LogWarning(err, BadRequestMessage);
+					return new BadRequestObjectResult(new ProblemDetails { Title = BadRequestMessage, Status = StatusCodes.Status400BadRequest, Detail = detail });
 				case NotAuthenticatedException:
-					logger.LogWarning(err, "Not authenticated");
-					return new UnauthorizedObjectResult(new ProblemDetails { Detail = detail });
+					logger.LogWarning(err, NotAuthenticatedMessage);
+					return new UnauthorizedObjectResult(new ProblemDetails { Title = NotAuthenticatedMessage, Status = StatusCodes.Status401Unauthorized, Detail = detail });
 				case ForbiddenException:
-					logger.LogWarning(err, "Forbidden");
+					logger.LogWarning(err, ForbiddenMessage);
 					return new ForbidResult();
 				case PreconditionFailedException:
-					logger.LogWarning(err, "Precondition failed");
-					return new ObjectResult(new ProblemDetails { Detail = detail }) {
+					logger.LogWarning(err, PreconditionFailedMessage);
+					return new ObjectResult(new ProblemDetails { Title = PreconditionFailedMessage, Status = StatusCodes.Status412PreconditionFailed, Detail = detail }) {
 						StatusCode = StatusCodes.Status412PreconditionFailed
 					};
 				case NotSupportedException:
-					logger.LogWarning(err, "Not supported");
-					return new ObjectResult(new ProblemDetails { Detail = detail }) {
+					logger.LogWarning(err, NotSupportedMessage);
+					return new ObjectResult(new ProblemDetails { Title = NotSupportedMessage, Status = StatusCodes.Status501NotImplemented, Detail = detail }) {
 						StatusCode = StatusCodes.Status501NotImplemented
 					};
 				case TimeoutException:
-					logger.LogWarning(err, "Request timeout");
-					return new ObjectResult(new ProblemDetails { Detail = detail }) {
+					logger.LogWarning(err, RequestTimeoutMessage);
+					return new ObjectResult(new ProblemDetails { Title = RequestTimeoutMessage, Status = StatusCodes.Status408RequestTimeout, Detail = detail }) {
 						StatusCode = StatusCodes.Status408RequestTimeout
 					};
 				default:
-					logger.LogError(err, "Unhandled exception");
-					return new ObjectResult(new ProblemDetails { Detail = detail }) {
+					logger.LogError(err, UnhandledExceptionMessage);
+					return new ObjectResult(new ProblemDetails { Title = UnhandledExceptionMessage, Status = StatusCodes.Status500InternalServerError, Detail = detail }) {
 						StatusCode = StatusCodes.Status500InternalServerError
 					};
 			}
