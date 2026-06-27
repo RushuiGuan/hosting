@@ -5,14 +5,11 @@ using System.Linq;
 
 namespace Albatross.Hosting {
 	public static class ValidationExtensions {
-		public static bool HasProblem(this ValidationResult result, [NotNullWhen(true)] out ValidationProblemDetails? details) {
+		public static bool HasProblem(this ValidationResult result, [NotNullWhen(true)] out ValidationProblemDetails? details, int status = 422) {
 			if (!result.IsValid) {
-				details = new ValidationProblemDetails(
-					result.Errors.GroupBy(e => e.PropertyName).ToDictionary(
-						g => g.Key,
-						g => g.Select(e => e.ErrorMessage).ToArray()
-					)
-				);
+				details = new ValidationProblemDetails(result.Errors.GroupBy(e => e.PropertyName).ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())) {
+					Status = status
+				};
 				return true;
 			} else {
 				details = null;
