@@ -57,7 +57,9 @@ namespace Albatross.Hosting.ExceptionHandling {
 					return new UnauthorizedObjectResult(new ProblemDetails { Title = NotAuthenticatedMessage, Status = StatusCodes.Status401Unauthorized, Detail = detail });
 				case ForbiddenException:
 					logger.LogWarning(err, ForbiddenMessage);
-					return new ForbidResult();
+					return new ObjectResult(new ProblemDetails { Title = ForbiddenMessage, Status = StatusCodes.Status403Forbidden, Detail = detail }) {
+						StatusCode = StatusCodes.Status403Forbidden
+					};
 				case PreconditionFailedException:
 					logger.LogWarning(err, PreconditionFailedMessage);
 					return new ObjectResult(new ProblemDetails { Title = PreconditionFailedMessage, Status = StatusCodes.Status412PreconditionFailed, Detail = detail }) {
