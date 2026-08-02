@@ -43,21 +43,38 @@ namespace Albatross.Hosting {
 		const string BaseUrlRegexPattern ="<\\s*base\\s+href\\s*=\\s*\"[^\"]*\"\\s*>";
 		static readonly Regex BaseUrlRegex = new Regex(BaseUrlRegexPattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
 		
+		/// <summary>
+		/// Points the index html's base href at <see cref="IAngularConfig.BaseHref"/>, writing only when that
+		/// changes something.
+		/// </summary>
+		/// <remarks>
+		/// The comparison is what makes this safe to call at startup. This runs on every startup, and an app
+		/// installed somewhere its own account cannot write to - under %ProgramFiles%, served by an IIS
+		/// application pool identity or a service account - used to throw UnauthorizedAccessException here and
+		/// take the whole host down with it, having opened the writer whether or not the regex matched anything.
+		/// Once the base href is correct, and something with the rights to do it has to set it the first time,
+		/// there is nothing left to write and a read-only install directory stops being fatal.
+		/// </remarks>
 		public void UpdateBaseHref() {
 			if (config.BaseHrefFile.Length > 0) {
 				var indexHtml = Path.Join(new string[] {
 					AppContext.BaseDirectory,
 				}.Union(config.BaseHrefFile).ToArray());
 				if (File.Exists(indexHtml)) {
-					logger.LogInformation("Replacing baseHref for {file}", indexHtml);
 					string content;
 					using (var reader = new StreamReader(indexHtml)) {
 						content = reader.ReadToEnd();
-						string replacement = $"<base href=\"{config.BaseHref}\">";
-						content = BaseUrlRegex.Replace(content, replacement);
 					}
-					using (var writer = new StreamWriter(indexHtml)) {
-						writer.Write(content);
+					string replacement = $"<base href=\"{config.BaseHref}\">";
+					string updated = BaseUrlRegex.Replace(content, replacement);
+					// ordinal: this is markup being matched byte for byte, not text being compared for meaning
+					if (string.Equals(content, updated, StringComparison.Ordinal)) {
+						logger.LogInformation("BaseHref of {file} is already {baseHref}, leaving the file alone", indexHtml, config.BaseHref);
+					} else {
+						logger.LogInformation("Replacing baseHref for {file}", indexHtml);
+						using (var writer = new StreamWriter(indexHtml)) {
+							writer.Write(updated);
+						}
 					}
 				} else {
 					logger.LogError("Angular index html file {name} doesn't exist", indexHtml);
