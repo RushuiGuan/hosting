@@ -71,9 +71,16 @@ namespace Albatross.Hosting {
 					if (string.Equals(content, updated, StringComparison.Ordinal)) {
 						logger.LogInformation("BaseHref of {file} is already {baseHref}, leaving the file alone", indexHtml, config.BaseHref);
 					} else {
-						logger.LogInformation("Replacing baseHref for {file}", indexHtml);
-						using (var writer = new StreamWriter(indexHtml)) {
-							writer.Write(updated);
+						try {
+							logger.LogInformation("Replacing baseHref for {file}", indexHtml);
+							using (var writer = new StreamWriter(indexHtml)) {
+								writer.Write(updated);
+							}
+						} catch (Exception err) {
+							// this exception should not cause a hard failure that stop the app from starting up!
+							// in a deployed environment, it is the responsibility of the installer to set baseref.
+							// in a dev environment, this should work.  if failed, user should check environment
+							logger.LogError(err, "Error updating baseHref for {file}", indexHtml);
 						}
 					}
 				} else {
