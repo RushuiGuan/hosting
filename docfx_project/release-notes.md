@@ -1,5 +1,24 @@
 # Release Notes
 
+## hosting-10.2.1 (2026-09-13)
+
+### Bug Fixes
+
+- **`TransformAngularConfig.UpdateBaseHref()` no longer writes when the file is already correct** - The index html is now compared against the transformed content and written only when the base href actually changes. Previously the writer was opened on every startup regardless of whether the regex matched anything, which threw `UnauthorizedAccessException` and took the host down when the app was installed in a read-only directory (under `%ProgramFiles%`, or served by an IIS application pool or service account identity).
+
+- **Base href write failures are no longer fatal** - A failure to write the index html is now logged as an error instead of propagating. In a deployed environment setting the base href is the installer's responsibility, so the app should still start.
+
+### Dependencies
+
+- Bumped `Microsoft.AspNetCore.*` and `Microsoft.Extensions.Hosting.*` package references to `10.0.12`
+- Bumped `Albatross.Config` to `8.0.1`
+
+### Infrastructure
+
+- **SourceLink moved to `Albatross.Hosting.csproj`** - `Microsoft.SourceLink.GitHub` (updated to `10.0.401`) is now referenced by the package project directly rather than applied to every project through `Directory.Build.props`.
+
+---
+
 ## hosting-10.2.0 (2026-03-31)
 
 ### Breaking Changes
