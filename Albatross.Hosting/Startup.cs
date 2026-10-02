@@ -190,6 +190,7 @@ namespace Albatross.Hosting {
 				options.EnrichDiagnosticContext = (ctx, http) => ctx.Set("User", GetUserIdentity(http));
 			});
 		}
+		
 		protected static string GetUserIdentity(HttpContext http) {
 			var user = http.User.Identity?.Name;
 			return string.IsNullOrEmpty(user) ? "<anon>" : $"<{user}>";

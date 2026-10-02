@@ -9,8 +9,8 @@
 	<ItemGroup>
 		<PackageReference Include="Albatross.EFCore" Version="10.0.0-103.main" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.9" />
-		<ProjectReference Include="..\Albatross.Hosting\Albatross.Hosting.csproj" />
 		<PackageReference Include="NJsonSchema" Version="11.6.1" />
+		<ProjectReference Include="..\Albatross.Hosting\Albatross.Hosting.csproj" />
 		<ProjectReference Include="..\Sample.Core\Sample.Core.csproj" />
 	</ItemGroup>
 	<ItemGroup>
@@ -20,14 +20,8 @@
 		<None Include="serilog*.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-	</ItemGroup>
-	<ItemGroup>
-		<Content Update="schema.angular-config.json">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		<Content Update="wwwroot\*">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
-	</ItemGroup>
-	<ItemGroup>
-		<Folder Include="Repositories\" />
-		<Folder Include="Services\" />
 	</ItemGroup>
 </Project>
