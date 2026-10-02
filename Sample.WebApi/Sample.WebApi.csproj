@@ -20,7 +20,7 @@
 		<None Include="serilog*.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<Content Update="wwwroot\*">
+		<Content Update="wwwroot\**">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
