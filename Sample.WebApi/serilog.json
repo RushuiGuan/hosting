@@ -10,15 +10,15 @@
         "WriteTo": {
             "Console": {
                 "Name": "Console",
-                "Args": {
-                    "outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ssz} {MachineName} {TraceIdentifier} {RequestId} {SourceContext} {ThreadId} [{Level:w3}] {Message:lj}{NewLine}{Exception}"
-                }
+				"Args": {
+					"outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ssz} {MachineName} {User} {RequestId} {SourceContext} {ThreadId} [{Level:w3}] {Message:lj}{NewLine}{Exception}"
+				}
             },
             "File": {
                 "Name": "File",
 				"Args": {
 					"path": "%LogDirectory%\\Sample.WebApi\\Sample.WebApi.log",
-					"outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ssz} {MachineName} {TraceIdentifier} {RequestId} {SourceContext} {ThreadId} [{Level:w3}] {Message:lj}{NewLine}{Exception}",
+					"outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ssz} {MachineName} {User} {RequestId} {SourceContext} {ThreadId} [{Level:w3}] {Message:lj}{NewLine}{Exception}",
 					"rollingInterval": "Day"
 				}
             }

@@ -35,6 +35,7 @@ namespace Albatross.Hosting {
 		protected bool RazorPages { get; set; } = false;
 		protected bool SuppressLoggingOfKnownExceptions { get; set; } = false;
 		protected bool MaskExceptionDetail { get; set; } = true;
+		protected bool LogRequests { get; set; } = false;
 		protected IApplicationFeatureProvider[] FeatureProviders { get; set; } = [];
 
 		/// <summary>
@@ -184,11 +185,25 @@ namespace Albatross.Hosting {
 			}
 		}
 
+		protected virtual void UseRequestLogging(IApplicationBuilder app) {
+			app.UseSerilogRequestLogging(options => {
+				options.EnrichDiagnosticContext = (ctx, http) => ctx.Set("User", GetUserIdentity(http));
+			});
+		}
+		protected static string GetUserIdentity(HttpContext http) {
+			var user = http.User.Identity?.Name;
+			return string.IsNullOrEmpty(user) ? "<anon>" : $"<{user}>";
+		}
+
 		public virtual void Configure(IApplicationBuilder app, ProgramSetting programSetting, EnvironmentSetting environmentSetting, ILogger<Startup> logger) {
+			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting.App, environmentSetting.Value);
 			if (this.CompressionMimeTypes.Any()) {
 				app.UseResponseCompression();
 			}
-			logger.LogInformation("Initializing {@program} with environment {environment}", programSetting.App, environmentSetting.Value);
+			if (this.LogRequests) {
+				// outside UseExceptionHandler so exceptions are logged once and the logged status reflects the handled response
+				UseRequestLogging(app);
+			}
 			app.UseExceptionHandler(new ExceptionHandlerOptions {
 				ExceptionHandler = new GlobalExceptionHandler(this.MaskExceptionDetail).Handle,
 				// only let the middleware log server errors; suppress diagnostics for client 4xx errors
