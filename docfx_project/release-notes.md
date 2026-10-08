@@ -1,5 +1,34 @@
 # Release Notes
 
+## hosting-10.2.4 (2026-10-08)
+
+### Changes
+
+- **Built-in heartbeat endpoint** - A new `HeartbeatController` serves `GET api/heartbeat`, returning the application name, environment and current UTC timestamp. The endpoint is `[AllowAnonymous]`, so it can be used by load balancers and monitoring probes without credentials. It is discovered automatically by any web host built on `Albatross.Hosting`.
+
+- **`UseHeartbeat` toggle on `Startup`** - A new `protected bool UseHeartbeat` property (default `true`). Set it to `false` in a derived `Startup` to remove the heartbeat controller from the application.
+
+---
+
+## hosting-10.2.3 (2026-10-02)
+
+### Changes
+
+- **Optional Serilog request logging** - A new `protected bool LogRequests` property on `Startup` (default `false`). When `true`, `UseSerilogRequestLogging()` is added to the pipeline, enriched with a `User` property holding the authenticated user name (or `<anon>`). The middleware sits outside the exception handler, so each failed request is logged once with the status code of the handled response. Override the virtual `UseRequestLogging()` to customize the middleware options.
+
+### Dependencies
+
+- Added `Serilog.AspNetCore` `10.0.0`
+- Bumped `Albatross.Config` to `8.0.2`
+
+---
+
+## hosting-10.2.2 (2026-09-13)
+
+First stable release of the changes listed under [hosting-10.2.1](#hosting-1021-2026-09-13), which was published only as release candidates. No additional changes.
+
+---
+
 ## hosting-10.2.1 (2026-09-13)
 
 ### Bug Fixes
