@@ -36,7 +36,8 @@ namespace Albatross.Hosting {
 		protected bool SuppressLoggingOfKnownExceptions { get; set; } = false;
 		protected bool MaskExceptionDetail { get; set; } = true;
 		protected bool LogRequests { get; set; } = false;
-		protected IApplicationFeatureProvider[] FeatureProviders { get; set; } = [];
+		protected bool UseHeartbeat { get; set; } = true;
+		protected List<IApplicationFeatureProvider> FeatureProviders { get; } = new List<IApplicationFeatureProvider>();
 
 		/// <summary>
 		/// When true, a plain text formatter is used for response contents are of type string.  The content type of the response will be changed to 'text/html'
@@ -149,9 +150,12 @@ namespace Albatross.Hosting {
 						options.InputFormatters.Add(new PlainTextInputFormatter());
 					}
 				});
-				if (this.FeatureProviders.Any()) {
+				if (!this.UseHeartbeat) {
+					FeatureProviders.Add(new ConditionalControllerFeatureProvider(type => type != typeof(HeartbeatController)));
+				}
+				if (FeatureProviders.Any()) {
 					builder.ConfigureApplicationPartManager(apm => {
-						foreach (var provider in this.FeatureProviders) {
+						foreach (var provider in FeatureProviders) {
 							apm.FeatureProviders.Add(provider);
 						}
 					});
@@ -190,7 +194,7 @@ namespace Albatross.Hosting {
 				options.EnrichDiagnosticContext = (ctx, http) => ctx.Set("User", GetUserIdentity(http));
 			});
 		}
-		
+
 		protected static string GetUserIdentity(HttpContext http) {
 			var user = http.User.Identity?.Name;
 			return string.IsNullOrEmpty(user) ? "<anon>" : $"<{user}>";
