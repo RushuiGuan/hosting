@@ -1,17 +1,15 @@
-using Albatross.Input;
-using FluentValidation;
+using Albatross.Exceptions;
 
 namespace Sample.Core.Requests {
-	public class VadidationExampleRequestValidator : AbstractValidator<ValidationExampleRequest>, ICached<VadidationExampleRequestValidator> {
-		public VadidationExampleRequestValidator() {
-			RuleFor(x => x).NotNull();
+	public static partial class Validators {
+		public static IEnumerable<ValidationError> Validate(this ValidationExampleRequest request) {
+			if (string.IsNullOrEmpty(request.Name)) {
+				yield return new ValidationError(nameof(ValidationExampleRequest.Name), "required");
+			}
 		}
 	}
 
-	public record class ValidationExampleRequest : IRequest<ValidationExampleRequest> {
-		public ValidationExampleRequest Sanitize() {
-			return this with { };
-		}
-		public static AbstractValidator<ValidationExampleRequest> Validator => ICached<VadidationExampleRequestValidator>.Instance;
+	public record class ValidationExampleRequest {
+		public string? Name { get; init; }
 	}
 }

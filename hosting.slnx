@@ -10,6 +10,7 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="Albatross.Hosting.UnitTesting/Albatross.Hosting.UnitTesting.csproj" />
   <Project Path="Albatross.Hosting/Albatross.Hosting.csproj" />
   <Project Path="Sample.Core/Sample.Core.csproj" />
   <Project Path="Sample.Daemon/Sample.Daemon.csproj" />

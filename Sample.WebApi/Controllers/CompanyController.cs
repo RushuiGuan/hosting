@@ -1,6 +1,5 @@
 using Albatross.Hosting;
 using Albatross.Hosting.ExceptionHandling;
-using Albatross.Input;
 using Microsoft.AspNetCore.Mvc;
 using Sample.Core.Dtos;
 using Sample.Core.Requests;
@@ -27,7 +26,7 @@ namespace Sample.WebApi.Controllers {
 		[HttpPost]
 		public async Task<ActionResult<CompanyDto>> Create([FromBody] CreateCompanyRequest request, CancellationToken cancellationToken) {
 			if (request.Validate().HasProblem(out var problem)) {
-				return BadRequest(problem);
+				return UnprocessableEntity(problem);
 			}
 			try {
 				var company = await companyService.Create(request.Name, cancellationToken);

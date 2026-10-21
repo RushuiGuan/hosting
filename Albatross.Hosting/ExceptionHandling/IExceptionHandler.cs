@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Security.Authentication;
 
 namespace Albatross.Hosting.ExceptionHandling {
 	public interface IExceptionHandler {
@@ -46,16 +47,21 @@ namespace Albatross.Hosting.ExceptionHandling {
 						Status = StatusCodes.Status409Conflict,
 						Detail = detail
 					});
+				case FieldValidationException fieldValidationException:
+					logger.LogWarning(err, ValidationFailedMessage);
+					return new UnprocessableEntityObjectResult(fieldValidationException.CreateProblemDetails(ValidationFailedMessage));
+				// a validation message describes the caller's own input, so it is never masked
+				case System.ComponentModel.DataAnnotations.ValidationException:
 				case ValidationException:
 					logger.LogWarning(err, ValidationFailedMessage);
-					return new UnprocessableEntityObjectResult(new ProblemDetails { Title = ValidationFailedMessage, Status = StatusCodes.Status422UnprocessableEntity, Detail = detail });
+					return new UnprocessableEntityObjectResult(new ProblemDetails { Title = ValidationFailedMessage, Status = StatusCodes.Status422UnprocessableEntity, Detail = err.Message });
 				case ArgumentException:
 					logger.LogWarning(err, BadRequestMessage);
 					return new BadRequestObjectResult(new ProblemDetails { Title = BadRequestMessage, Status = StatusCodes.Status400BadRequest, Detail = detail });
-				case NotAuthenticatedException:
+				case NotAuthenticatedException or AuthenticationException:
 					logger.LogWarning(err, NotAuthenticatedMessage);
 					return new UnauthorizedObjectResult(new ProblemDetails { Title = NotAuthenticatedMessage, Status = StatusCodes.Status401Unauthorized, Detail = detail });
-				case ForbiddenException:
+				case ForbiddenException or AccessViolationException or UnauthorizedAccessException:
 					logger.LogWarning(err, ForbiddenMessage);
 					return new ObjectResult(new ProblemDetails { Title = ForbiddenMessage, Status = StatusCodes.Status403Forbidden, Detail = detail }) {
 						StatusCode = StatusCodes.Status403Forbidden

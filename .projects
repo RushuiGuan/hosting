@@ -4,3 +4,6 @@ Albatross.Hosting
 # services
 Sample.WebApi
 Sample.Daemon
+
+# tests
+Albatross.Hosting.UnitTesting

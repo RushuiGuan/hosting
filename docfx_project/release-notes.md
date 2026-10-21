@@ -1,5 +1,43 @@
 # Release Notes
 
+## hosting-10.3.2 (2026-10-20)
+
+### Breaking Changes
+
+- **FluentValidation removed** - `Albatross.Hosting` no longer references `FluentValidation`. Validation errors are now `ValidationError` items from `Albatross.Exceptions`, each pairing an optional field with an error message.
+
+- **`HasProblem` takes validation errors** - `ValidationExtensions.HasProblem` now extends `IEnumerable<ValidationError>` instead of FluentValidation's `ValidationResult`, and its `status` parameter has been removed. Write request validation as a method that returns `ValidationError` items and return the problem with `UnprocessableEntity(problem)`.
+
+- **`FluentValidation.ValidationException` no longer maps to 422** - `GlobalExceptionHandler` no longer recognizes it, so an application that still throws it gets a 500 response, logged as a server error. This change does not cause a compilation error; throw `Albatross.Exceptions.FieldValidationException` for field errors, or `Albatross.Exceptions.ValidationException` for a single message.
+
+### Changes
+
+- **Field errors in validation responses** - A `FieldValidationException` is returned with status 422 as a `ValidationProblemDetails` by both `IExceptionHandler` and `GlobalExceptionHandler`, with the errors grouped by field under `errors`. An error without a field appears under the `""` key.
+
+- **Validation errors are never masked** - Validation errors describe the caller's own input, so they are returned even when `MaskExceptionDetail` is `true`: the field errors of a `FieldValidationException`, and the message of a `ValidationException` or `System.ComponentModel.DataAnnotations.ValidationException` as `detail`. Both messages were previously masked. This change does not cause a compilation error; an application that puts sensitive information in a validation message should remove it.
+
+- **`CreateProblemDetails` extensions** - New `ValidationExtensions.CreateProblemDetails` methods build the problem body from a set of `ValidationError` items or from a `FieldValidationException`.
+
+- **`DefaultExceptionHandler` status codes aligned with `GlobalExceptionHandler`** - `System.ComponentModel.DataAnnotations.ValidationException` now returns 422, `AuthenticationException` returns 401, and `AccessViolationException` and `UnauthorizedAccessException` return 403. They previously returned 500 from `DefaultExceptionHandler`.
+
+- **`GlobalExceptionHandler.Title`** - The generic title of the global handler is now exposed as a public constant.
+
+- **`HasProblem` reads its errors once** - A validator written with `yield return` runs a single time.
+
+### Dependencies
+
+- Bumped `Albatross.Exceptions` to `1.0.6`
+- Bumped `Microsoft.AspNetCore.*` and `Microsoft.Extensions.Hosting.*` package references to `10.0.13`
+- Bumped `Swashbuckle.AspNetCore` to `10.3.1`
+- Bumped `Microsoft.SourceLink.GitHub` to `10.0.402`
+- Removed `FluentValidation`
+
+### Infrastructure
+
+- **Unit tests** - New `Albatross.Hosting.UnitTesting` project covering the exception to status code mapping of both handlers, detail masking, validation responses and `HasProblem`.
+
+---
+
 ## hosting-10.2.4 (2026-10-08)
 
 ### Changes

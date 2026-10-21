@@ -18,6 +18,8 @@ namespace Albatross.Hosting.ExceptionHandling {
 	public sealed class GlobalExceptionHandler {
 		private readonly bool maskExceptionDetail;
 
+		public const string Title = "An error occurred while processing your request";
+
 		/// <summary>
 		/// Serializer options used to write the <see cref="ProblemDetails"/> body: camelCase property names with
 		/// null-valued properties omitted.
@@ -37,7 +39,7 @@ namespace Albatross.Hosting.ExceptionHandling {
 				NotFoundException => StatusCodes.Status404NotFound,
 				ConflictException => StatusCodes.Status409Conflict,
 				ValidationException => StatusCodes.Status422UnprocessableEntity,
-				FluentValidation.ValidationException => StatusCodes.Status422UnprocessableEntity,
+				FieldValidationException => StatusCodes.Status422UnprocessableEntity,
 				System.ComponentModel.DataAnnotations.ValidationException => StatusCodes.Status422UnprocessableEntity,
 				ArgumentException => StatusCodes.Status400BadRequest,
 				NotSupportedException => StatusCodes.Status501NotImplemented,
@@ -54,7 +56,7 @@ namespace Albatross.Hosting.ExceptionHandling {
 
 		/// <param name="maskExceptionDetail">
 		/// When true, the detail of all error responses is set to null so internal information is not leaked
-		/// to the caller. Enable for applications with high security requirements; leave off for internal
+		/// to the caller. Validation errors describe the caller's own input and are always returned. Enable for applications with high security requirements; leave off for internal
 		/// applications where the detail aids diagnostics.
 		/// </param>
 		public GlobalExceptionHandler(bool maskExceptionDetail) {
@@ -76,18 +78,24 @@ namespace Albatross.Hosting.ExceptionHandling {
 					return;
 				}
 				var status = GetStatusCode(exception);
-				var problem = new ProblemDetails {
-					Title = "An error occurred while processing your request",
-					Status = status,
-					Extensions = {
-						["traceId"] = context.TraceIdentifier
-					}
-				};
-				problem.Detail = maskExceptionDetail ? null : exception.Message;
+				// a validation message describes the caller's own input, so it is never masked
+				var detail = maskExceptionDetail && exception is not (ValidationException or System.ComponentModel.DataAnnotations.ValidationException) ? null : exception.Message;
+				ProblemDetails problem;
+				if (exception is FieldValidationException fieldValidationException) {
+					problem = fieldValidationException.CreateProblemDetails(Title);
+				} else {
+					problem = new ProblemDetails {
+						Title = Title,
+						Status = status,
+						Detail = detail,
+					};
+				}
+				problem.Extensions["traceId"] = context.TraceIdentifier;
 				context.Response.StatusCode = status;
 				context.Response.ContentType = MediaTypeNames.Application.ProblemJson;
 				try {
-					await JsonSerializer.SerializeAsync(context.Response.BodyWriter.AsStream(), problem, SerializerOptions);
+					// the runtime type, so that the errors of a ValidationProblemDetails are written too
+					await JsonSerializer.SerializeAsync(context.Response.BodyWriter.AsStream(), problem, problem.GetType(), SerializerOptions);
 				} catch {
 					// Serialization failure — response headers already sent; nothing more can be done
 				}

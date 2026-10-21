@@ -5,7 +5,7 @@
 1. **`IExceptionHandler`** — an injectable service for controller-level exception handling. Controllers catch exceptions from services and repositories, then delegate to `IExceptionHandler.Handle` to produce a consistent `ActionResult`. This is the primary error handling mechanism.
 2. **`GlobalExceptionHandler`** — a middleware-level fallback that catches any unhandled exception and converts it into an [RFC 7807](https://tools.ietf.org/html/rfc7807) `ProblemDetails` response. This is a safety net only.
 
-Both layers share the same exception-to-status-code mapping and detail masking behavior.
+Both layers share the same exception-to-status-code mapping and detail masking behavior. They differ in the title and extra fields of the response body; see [Response Format](#response-format).
 
 ## Controller-Level Exception Handling
 
@@ -74,7 +74,7 @@ Both `IExceptionHandler` and `GlobalExceptionHandler` use the same exception-to-
 |----------------|-------------|
 | `NotFoundException` | 404 Not Found |
 | `ConflictException` | 409 Conflict |
-| `ValidationException`, `FluentValidation.ValidationException`, `System.ComponentModel.DataAnnotations.ValidationException` | 422 Unprocessable Entity |
+| `ValidationException`, `FieldValidationException`, `System.ComponentModel.DataAnnotations.ValidationException` | 422 Unprocessable Entity |
 | `ArgumentException` | 400 Bad Request |
 | `NotSupportedException` | 501 Not Implemented |
 | `NotAuthenticatedException`, `AuthenticationException` | 401 Unauthorized |
@@ -85,6 +85,8 @@ Both `IExceptionHandler` and `GlobalExceptionHandler` use the same exception-to-
 
 ### Response Format
 
+`GlobalExceptionHandler` returns a generic title and the request trace id:
+
 ```json
 {
     "status": 404,
@@ -94,21 +96,71 @@ Both `IExceptionHandler` and `GlobalExceptionHandler` use the same exception-to-
 }
 ```
 
+`IExceptionHandler` returns a title specific to the error, such as `Not found`, `Conflict` or `Validation failed`, and no trace id:
+
+```json
+{
+    "title": "Not found",
+    "status": 404,
+    "detail": "Item 42 not found"
+}
+```
+
 | Property | Description |
 |----------|-------------|
 | `status` | HTTP status code from the mapping above |
-| `title` | Generic error title |
+| `title` | Generic title from `GlobalExceptionHandler`; error specific title from `IExceptionHandler` |
 | `detail` | Exception detail — see [Masking Error Detail](#masking-error-detail) |
-| `traceId` | Request trace identifier; quote it when correlating a response to a server log entry |
+| `traceId` | `GlobalExceptionHandler` only. Request trace identifier; quote it when correlating a response to a server log entry |
+
+## Validation Errors
+
+A request is validated by code that returns `ValidationError` items from `Albatross.Exceptions`, each pairing an optional field with an error message. Write the checks as a method that yields them:
+
+```csharp
+public static IEnumerable<ValidationError> Validate(this CreateCompanyRequest request) {
+    if (string.IsNullOrEmpty(request.Name)) {
+        yield return new ValidationError("name", "Name is missing");
+    } else if (request.Name.Length > 256) {
+        yield return new ValidationError("name", "Name is longer than 256 characters");
+    }
+}
+```
+
+In a controller, `HasProblem` turns the errors into a `ValidationProblemDetails`. It reads the errors once, so a validator written with `yield return` runs a single time. Return the problem with `UnprocessableEntity` so that the HTTP status and the `status` in the body are both 422:
+
+```csharp
+if (request.Validate().HasProblem(out var problem)) {
+    return UnprocessableEntity(problem);
+}
+```
+
+Below a controller, throw `new FieldValidationException(errors)` instead. `IExceptionHandler` returns the same body for it, and `GlobalExceptionHandler` returns it with its generic title and the `traceId`:
+
+```json
+{
+    "title": "Validation failed",
+    "status": 422,
+    "errors": {
+        "name": ["Name is missing"]
+    }
+}
+```
+
+- An error about the request as a whole, created with `new ValidationError(error)`, has no field and appears under the `""` key.
+- A `ValidationException` carries a single message and no field errors. It returns a `ProblemDetails` with the message as `detail`. `ValidationException` and `FieldValidationException` are unrelated types, so catching one does not catch the other.
+- Validation errors describe the caller's own input, so they are never masked. See [Masking Error Detail](#masking-error-detail).
 
 ## Masking Error Detail
 
-When `MaskExceptionDetail` is `true`, the `detail` field is set to `null` for all error responses. This prevents leaking internal information (SQL, file paths, connection strings) to the caller. When `false`, `detail` contains the exception message.
+When `MaskExceptionDetail` is `true`, the `detail` field is set to `null` for error responses. This prevents leaking internal information (SQL, file paths, connection strings) to the caller. When `false`, `detail` contains the exception message.
+
+Validation errors are the exception: they describe the caller's own input, and the caller needs them to fix the request, so they are returned whatever the setting. This covers the field errors of a `FieldValidationException` and the `detail` of a `ValidationException` or `System.ComponentModel.DataAnnotations.ValidationException`. Do not put internal information in a validation message.
 
 | `MaskExceptionDetail` | `detail` value |
 |-----------------------|----------------|
 | `false` | `exception.Message` — full diagnostics |
-| `true` | `null` — no detail returned |
+| `true` | `null` — no detail returned, except for validation errors |
 
 The full exception is always written to the server log, so masking the response never loses diagnostic information — use the `traceId` to find the logged entry.
 
@@ -150,7 +202,7 @@ For per-request logging (method, path, status, elapsed time) see [Http Request L
 | Scenario | Recommended Approach |
 |----------|---------------------|
 | Known error conditions | Catch and handle via `IExceptionHandler` |
-| Validation errors | Throw `ValidationException` (→ 422) or `ArgumentException` (→ 400) |
+| Validation errors | Return `UnprocessableEntity` from `HasProblem` in the controller, or throw `FieldValidationException` or `ValidationException` (→ 422); `ArgumentException` (→ 400) for a malformed call |
 | Not found errors | Throw `NotFoundException` (→ 404) |
 | Edge cases | Use the custom handler callback on `IExceptionHandler.Handle` |
 | Unexpected errors | Let exceptions propagate to the global fallback (→ 500) |
