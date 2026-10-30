@@ -1,1 +1,10 @@
-Hello World
+<h1>SignalR serverless test</h1>
+<p>Connection: {{ signalR.state() }}</p>
+@if (error()) {
+  <p class="error">{{ error() }}</p>
+}
+<ul>
+  @for (item of signalR.messages(); track $index) {
+    <li>{{ item }}</li>
+  }
+</ul>

@@ -21,6 +21,8 @@ namespace Sample.WebApi {
 			services.AddSingleton<ISemanticExceptionConverter, EFCoreSemanticExceptionConverter>();
 			services.AddScoped<ICompanyRepository, CompanyRepository>();
 			services.AddScoped<ICompanyService, CompanyService>();
+			services.AddSingleton<SignalRHub>();
+			services.AddHostedService(provider => provider.GetRequiredService<SignalRHub>());
 		}
 	}
 }

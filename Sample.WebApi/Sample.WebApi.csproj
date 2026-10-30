@@ -8,6 +8,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Albatross.EFCore" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Azure.SignalR.Management" Version="1.33.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.13" />
 		<PackageReference Include="NJsonSchema" Version="11.6.1" />
 		<ProjectReference Include="..\Albatross.Hosting\Albatross.Hosting.csproj" />
