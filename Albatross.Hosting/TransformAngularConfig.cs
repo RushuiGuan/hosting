@@ -40,7 +40,8 @@ namespace Albatross.Hosting {
 			UpdateBaseHref();
 		}
 		
-		const string BaseUrlRegexPattern ="<\\s*base\\s+href\\s*=\\s*\"[^\"]*\"\\s*>";
+		// the optional slash matches the self-closing form ng build can emit
+		const string BaseUrlRegexPattern ="<\\s*base\\s+href\\s*=\\s*\"[^\"]*\"\\s*/?\\s*>";
 		static readonly Regex BaseUrlRegex = new Regex(BaseUrlRegexPattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
 		
 		/// <summary>
