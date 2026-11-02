@@ -1,5 +1,13 @@
 # Release Notes
 
+## hosting-10.3.3 (2026-11-02)
+
+### Fixes
+
+- **Self-closing base tag** - The startup base href rewrite in `TransformAngularConfig` now matches `<base href="..."/>` as well as `<base href="...">`. A self-closing tag, which `ng build` can emit, was previously left unchanged while the log reported that the base href was already correct.
+
+---
+
 ## hosting-10.3.2 (2026-10-20)
 
 ### Breaking Changes
